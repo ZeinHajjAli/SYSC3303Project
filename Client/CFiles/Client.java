@@ -27,7 +27,7 @@ public class Client
 		//try/catch block to circumvent IOExceptions for sending and receiving on sockets
 		try {
 			DatagramSocket socket = createSocket(24);
-			byte data[] = new byte[100];
+			byte data[] = new byte[512];
 			DatagramPacket received = new DatagramPacket(data, data.length);
 			DatagramPacket packet = createPacket(filename);
 			String testData = new String(packet.getData(), 0, packet.getLength());

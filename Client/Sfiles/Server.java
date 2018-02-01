@@ -12,7 +12,7 @@ public class Server {
 	{
 
 		//Initializes packet to receive from the intermediate
-		byte data[] = new byte[100];
+		byte data[] = new byte[512];
 	  DatagramPacket receivedPacket = new DatagramPacket(data, data.length);
 
 	    //try/catch block to catch any exceptions made by sending and receiving through sockets

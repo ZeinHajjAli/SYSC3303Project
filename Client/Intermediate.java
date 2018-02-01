@@ -10,28 +10,28 @@ public class Intermediate {
 
 	public static void main(String[] args)
 	{
-		
+
 		//Initializes paxckets for sending and receiving from both the server and the client
-		byte data[] = new byte[100];
-	    DatagramPacket receivedPacket = new DatagramPacket(data, data.length);
-		
-	    byte serverData[] = new byte[4];
-	    DatagramPacket serverPacket = new DatagramPacket(serverData, serverData.length);
-	    
-	    //try/catch block to catch the IOException that may arise from sending and receiving through sockets
+		byte data[] = new byte[512];
+	  DatagramPacket receivedPacket = new DatagramPacket(data, data.length);
+
+	 	byte serverData[] = new byte[512];
+	  DatagramPacket serverPacket = new DatagramPacket(serverData, serverData.length);
+
+	   //try/catch block to catch the IOException that may arise from sending and receiving through sockets
 		try {
 			
 			//Initializes the two DatagramSockets used to send and receive from the client and server respectivly
 			DatagramSocket recSocket = createSocket(23);
 			DatagramSocket sendRecSocket = new DatagramSocket(80, InetAddress.getByName("127.0.0.1"));
 			System.out.println("Opened Sockets");
-			
+
 			//while loop to keep the process running
 			while(true) {
 				//waits to receive a packet from the client
 				recSocket.receive(receivedPacket);
 				System.out.println("received");
-				
+
 				receivedPacket.setPort(69);
 				printPacket(receivedPacket);
 				//sends the packet on to the server
@@ -48,21 +48,21 @@ public class Intermediate {
 				//closes the recently opened socket
 				sendSocket.close();
 			}
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
-		
-		
-		
+
+
+
+
+
 	}
-	
+
 	//same method as the one found in the client class
-	public static void printPacket(DatagramPacket p) 
+	public static void printPacket(DatagramPacket p)
 	{
-		
+
 		byte[] receivedBytes = p.getData();
 		System.out.println("Data being sent/received in bytes: ");
 		for(byte element : receivedBytes) {
@@ -73,27 +73,27 @@ public class Intermediate {
 		System.out.println("Data being sent/received: " + receivedString);
 		System.out.println("from/to address: " + p.getAddress());
 		System.out.println("Port Number: " + p.getPort());
-		
-		
-		
-		
+
+
+
+
 	}
-	
+
 	//same method thats found in the client class
 	public static DatagramSocket createSocket(int port)
 	{
-		
+
 		DatagramSocket socket = null;
 		try {
 			socket = new DatagramSocket(port, InetAddress.getByName("127.0.0.1"));
 		} catch (SocketException | UnknownHostException e) {
 			e.printStackTrace();
 		}
-		
+
 		return socket;
-		
+
 	}
-	
-	
-	
+
+
+
 }
