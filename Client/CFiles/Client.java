@@ -2,12 +2,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.net.DatagramPacket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.io.File;
 import java.nio.file.Files;
+import java.io.FileInputStream;
 
 public class Client
 {
@@ -25,7 +27,7 @@ public class Client
 		//try/catch block to circumvent IOExceptions for sending and receiving on sockets
 		try {
 			DatagramSocket socket = createSocket(24);
-
+			byte data[] = new byte[100];
 			DatagramPacket received = new DatagramPacket(data, data.length);
 			DatagramPacket packet = createPacket(filename);
 			String testData = new String(packet.getData(), 0, packet.getLength());
@@ -64,15 +66,27 @@ public class Client
 	}
 
 	//Creates the DatagramPacket following the guidelines in the assignment document
-	public static DatagramPacket createPacket(filename)
+	public static DatagramPacket createPacket(String filename)
 	{
+		FileInputStream myInputStream = null;
 		File file = new File(filename);
+		try{
+			myInputStream = new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 		byte[] filenameBytes = new byte[filename.length()];
 		filenameBytes = filename.getBytes();
-		byte fileBytes[] = Files.toByteArray(file);
+		byte fileBytes[] = new byte[(int)file.length()];
+		try{
+			myInputStream.read(fileBytes);
+		} catch (IOException e){
+			e.printStackTrace();
+		}
 		int finalSize = filename.length() + fileBytes.length + 16;
-		byte finaleArr[] = new byte[finalSize];
+		byte finalArr[] = new byte[finalSize];
 		byte separatorBytes[] = {1,2,3,4,5,6,7,8,8,7,6,5,4,3,2,1};
+
 
 		int i = 0;
 		for (int j=0; j<filenameBytes.length; j++){
