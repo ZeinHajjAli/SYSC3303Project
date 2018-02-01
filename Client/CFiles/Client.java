@@ -39,7 +39,7 @@ public class Client
       System.arraycopy(received.getData(), received.getOffset(), data, 0, received.getLength());
 			received.setData(data);
 			printPacket(received);
-
+100
 
 
 
@@ -75,35 +75,18 @@ public class Client
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		byte[] filenameBytes = new byte[filename.length()];
-		filenameBytes = filename.getBytes();
+
 		byte fileBytes[] = new byte[(int)file.length()];
 		try{
 			myInputStream.read(fileBytes);
 		} catch (IOException e){
 			e.printStackTrace();
 		}
-		int finalSize = filename.length() + fileBytes.length + 16;
-		byte finalArr[] = new byte[finalSize];
-		byte separatorBytes[] = {1,2,3,4,5,6,7,8,8,7,6,5,4,3,2,1};
 
-
-		int i = 0;
-		for (int j=0; j<filenameBytes.length; j++){
-			finalArr[i] = filenameBytes[j];
-			i++;
-		}
-		for (int j=0; j<16; j++){
-			finalArr[i] = separatorBytes[j];
-		}
-		for (int j=0; j<fileBytes.length; j++){
-			finalArr[i] = fileBytes[j];
-			i++;
-		}
 
 
 		//puts the final byte array into a new DatagramPacket and gives it the Address as well as the receiving port
-		DatagramPacket packet = new DatagramPacket(finalArr, finalArr.length, new InetSocketAddress("localhost",23));
+		DatagramPacket packet = new DatagramPacket(fileBytes, fileBytes.length, new InetSocketAddress("localhost",23));
 		printPacket(packet);
 		return packet;
 
