@@ -66,7 +66,7 @@ public class Client
 	}
 
 	//Creates the DatagramPacket following the guidelines in the assignment document
-	public static DatagramPacket createPacket(String filename)
+	public static DatagramPacket createPacket(String filename) throws FileNotFoundException
 	{
 		FileInputStream myInputStream = null;
 		File file = new File(filename);
