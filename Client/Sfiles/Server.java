@@ -5,6 +5,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Scanner;
+import java.io.File;
+import java.nio.file.Files;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 public class Server {
 
@@ -36,21 +41,17 @@ public class Server {
 				System.out.println("received");
 				printPacket(receivedPacket);
 				//calls validatePacket method to find what pattern to use
-				String packetInfo = validatePacket(receivedPacket);
-
-				if(packetInfo.compareTo("read") == 0) {
-					sendInfo[1] = 3;
-					sendInfo[3] = 1;
-				}
-				else if(packetInfo.compareTo("write") == 0) {
-					sendInfo[1] = 4;
-				}
+				saveFile(receivedPacket);
 
 				DatagramPacket sendPacket = new DatagramPacket(sendInfo, sendInfo.length, new InetSocketAddress("localhost",sendPort));
 				printPacket(sendPacket);
 				DatagramSocket sendSocket = new DatagramSocket(96, InetAddress.getByName("127.0.0.1"));
 				sendSocket.send(sendPacket);
 				sendSocket.close();
+
+				data = new byte[512];
+        System.arraycopy(receivedPacket.getData(), receivedPacket.getOffset(), data, 0, receivedPacket.getLength());
+				receivedPacket.setData(data);
 
 			}
 
@@ -114,6 +115,29 @@ public class Server {
 		}
 
 		return socket;
+
+	}
+
+	public static void saveFile(DatagramPacket packet) throws Exception
+	{
+
+		Scanner input = new Scanner(System.in);
+		System.out.println("Save file as: ");
+		String filename = input.next();
+		input.close();
+		if(filename.equals("exit") || filename.length()==0){
+			System.exit(0);
+		}
+
+		byte[] receivedBytes = packet.getData();
+		FileOutputStream fileWriter = null;
+		try {
+    fileWriter = new FileOutputStream(filename);
+    fileWriter.write(receivedBytes);
+ 		} finally {
+    fileWriter.close();
+ 		}
+
 
 	}
 
