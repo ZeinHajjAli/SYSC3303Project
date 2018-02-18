@@ -4,17 +4,21 @@ SYSC 3303 Project Iteration 1
 Files:
 
 Client.java
-Intermediate.java(Error simulator)
-Server.Java
+ErrorSimulator.java(Error simulator)
+Server.Java - the server class
+LostFile.Java - This calss will simulate a lost TFTP packet 
+Duplicate.java - This class will simulate a duplicated TFTP packet
+PacketType.java - this is an enum for the different types of packets
+ErrorCodes.java -this is an enum for the error codes associated with this iteration
 
 Instructions:
-1. Compile all three classes 
+1. Compile all classes 
 1. Run Server: main by running as >> Java Application 
 2. Run Intermediate : main by running as >> Java Application
 3. Run Client: main by running as >> Java Application
 
 Project breakdown
 
-Theo Hronowsky worked on the server
-Zein Haij-Ali worked on the client
-Orinami Adam worked on the UML,UCM and README.txt documents. 
+Theo Hronowsky worked on the server, serverClientConnection and the Timing diagram
+Zein Haij-Ali worked on the client and ClientConnection clases
+Orinami Adam worked on the Error Simulator an, UML,UCM and README.txt documents. 
