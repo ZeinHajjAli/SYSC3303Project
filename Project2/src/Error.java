@@ -14,21 +14,15 @@ public class Error {
  /*
   * getters and setters
   */
-	public void setErrorcode(ErrorCodes errorcode) {
-		this.errorcode = errorcode;
-	}
+	
 	public PacketType getPacketType() {
 		return packetType;
 	}
-	public void setPacketType(PacketType packetType) {
-		this.packetType = packetType;
-	}
+	
 	public int getBlockNumber() {
 		return blockNumber;
 	}
-	public void setBlockNumber(int blockNumber) {
-		this.blockNumber = blockNumber;
-	}
+	
 	public ErrorCodes getErrorcode() {
 		return errorcode;
 	}

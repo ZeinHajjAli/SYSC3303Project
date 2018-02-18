@@ -16,7 +16,6 @@ public class ErrorSimulator {
 	private static final int SERVER_PORT_NUMBER = 69;
 	
 	public ErrorSimulator(){
-		//hostIP = readFile("IPAddress.txt");		//host IP Address
 		try {
 			receiveSocket = new DatagramSocket(PORT_NUMBER);
 		} catch (SocketException e) {
@@ -35,62 +34,7 @@ public class ErrorSimulator {
 			}
 	}
 
-/*	public static void main(String[] args)
-	{
-		
-		//Initializes paxckets for sending and receiving from both the server and the client
-		//byte data[] = new byte[512];
-		  //DatagramPacket receivedPacket = new DatagramPacket(data, data.length);
 
-	 	byte serverData[] = new byte[512];
-	  DatagramPacket serverPacket = new DatagramPacket(serverData, serverData.length);
-
-	   //try/catch block to catch the IOException that may arise from sending and receiving through sockets
-		try {
-
-			//Initializes the two DatagramSockets used to send and receive from the client and server respectivly
-			DatagramSocket recSocket = createSocket(23);
-			DatagramSocket sendRecSocket = new DatagramSocket(80, InetAddress.getByName("127.0.0.1"));
-			System.out.println("Opened Sockets");
-
-			//while loop to keep the process running
-			while(true) {
-				//waits to receive a packet from the client
-				recSocket.receive(receivedPacket);
-				data = new byte[receivedPacket.getLength()];
-        System.arraycopy(receivedPacket.getData(), receivedPacket.getOffset(), data, 0, receivedPacket.getLength());
-				receivedPacket.setData(data);
-				System.out.println("received");
-
-				receivedPacket.setPort(69);
-				printPacket(receivedPacket);
-				//sends the packet on to the server
-				sendRecSocket.send(receivedPacket);
-				//waits to receive a packet from the server
-				sendRecSocket.receive(serverPacket);
-				serverData = new byte[serverPacket.getLength()];
-        System.arraycopy(serverPacket.getData(), serverPacket.getOffset(), serverData, 0, serverPacket.getLength());
-				serverPacket.setData(serverData);
-				printPacket(serverPacket);
-				serverPacket.setPort(24);
-				//opens a new socket to send back to the client
-				DatagramSocket sendSocket = new DatagramSocket(81, InetAddress.getByName("127.0.0.1"));
-				printPacket(serverPacket);
-				//sends packet from the server on to the client
-				sendSocket.send(serverPacket);
-				//closes the recently opened socket
-				sendSocket.close();
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-
-
-
-
-	}*/
 
 	//same method as the one found in the client class
 	public static void printPacket(DatagramPacket p)

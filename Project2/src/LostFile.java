@@ -1,7 +1,7 @@
 /*
  * This class will create a thread and simulate a lost packet(error code 1)
  */
-import java.io.*;
+import java.io.IOException;
 import java.net.*;
 
 
@@ -14,8 +14,10 @@ public class LostFile extends Thread{
 		
 		
 
-	public LostFile(Error error) {
+	public LostFile(Error error, DatagramPacket packet, int serverPort) {
 		this.error = error;
+		this.packet = packet;
+		this.serverPort = serverPort;
 		// TODO Auto-generated constructor stub
 	}
  public void run() {
@@ -32,7 +34,7 @@ public class LostFile extends Thread{
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
-	serverPort = packet.getPort();
+	
 	 }
 	 
 	 else if (error.getPacketType() == PacketType.ACK) {
