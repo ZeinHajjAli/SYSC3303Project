@@ -1,5 +1,8 @@
 import java.io.*;
 import java.net.*;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
+import java.rmi.AccessException;
 import java.util.Scanner;
 
 public class Client
@@ -44,6 +47,14 @@ public class Client
 				writeRequest(filename);
 			}
 		} catch (IOException e) {
+			String msg = e.getMessage();
+			if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
+				sendError(3,port);
+			} else if(e.getClass().equals(AccessDeniedException.class)){
+				sendError(2,port);
+			} else if(e.getClass().equals(FileAlreadyExistsException.class)){
+				sendError(6,port);
+			}
 			e.printStackTrace();
 		}
 

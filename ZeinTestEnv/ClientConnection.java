@@ -2,6 +2,8 @@ import com.sun.javaws.exceptions.UnsignedAccessViolationException;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 
 
 public class ClientConnection extends Thread {
@@ -41,6 +43,14 @@ public class ClientConnection extends Thread {
 			try {
 				writeRequest(file);
 			} catch (IOException e) {
+				String msg = e.getMessage();
+				if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
+					sendError(3,port);
+				} else if(e.getClass().equals(AccessDeniedException.class)){
+					sendError(2,port);
+				} else if(e.getClass().equals(FileAlreadyExistsException.class)){
+					sendError(6,port);
+				}
 				e.printStackTrace();
 			}
 		} else if (type.equals("RRQ")) {
@@ -53,6 +63,14 @@ public class ClientConnection extends Thread {
 			try {
 				readRequest(request, file);
 			} catch (IOException e) {
+				String msg = e.getMessage();
+				if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
+					sendError(3,port);
+				} else if(e.getClass().equals(AccessDeniedException.class)){
+					sendError(2,port);
+				} else if(e.getClass().equals(FileAlreadyExistsException.class)){
+					sendError(6,port);
+				}
 				e.printStackTrace();
 			}
 		} else {
