@@ -14,6 +14,9 @@ public class ErrorSimulator {
 	private static String hostIP;		
 	private static final int PORT_NUMBER = 23;
 	private static final int SERVER_PORT_NUMBER = 69;
+	private Delay delaysim;
+	private LostFile lostSim;
+	private Duplicate duplicatesim;
 	
 	public ErrorSimulator(){
 		try {
@@ -35,7 +38,9 @@ public class ErrorSimulator {
 	}
 
 
-
+public void createSim() {
+	
+}
 	//same method as the one found in the client class
 	public static void printPacket(DatagramPacket p)
 	{
@@ -71,9 +76,23 @@ public class ErrorSimulator {
 
 	}
 	
-
-
+	public static void main(String args[]) {
+		ErrorSimulator errorSim = new ErrorSimulator();
+		
+		try {
+			while (true) {
+				errorSim.sendReceive();
+				
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 
 
 
 }
+
