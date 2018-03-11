@@ -1,10 +1,7 @@
-import com.sun.javaws.exceptions.UnsignedAccessViolationException;
-
 import java.io.*;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
-
 
 public class ClientConnection extends Thread {
 
@@ -15,25 +12,29 @@ public class ClientConnection extends Thread {
 	private static FileInputStream myInputStream;
 	private static DatagramPacket lastPacket;
 	private static int port;
-	private static final int timeout = 50000;
+	private static final int TIMEOUT = 50000;
 
 	ClientConnection(DatagramPacket request){
+
 		this.request = request;
+
 		try {
 			socket = new DatagramSocket();
-			socket.setSoTimeout(timeout);
+			socket.setSoTimeout(TIMEOUT);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void run(){
+
 		port = request.getPort();
 		String type = validatePacket(request);
 		String file = null;
 
 		if (type.equals("WRQ")) {
 			sendACK(request);
+
 			try {
 				file = getFilename(request);
 			} catch (FileNotFoundException e) {
@@ -44,6 +45,7 @@ public class ClientConnection extends Thread {
 				writeRequest(file);
 			} catch (IOException e) {
 				String msg = e.getMessage();
+
 				if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
 					sendError(3,port);
 				} else if(e.getClass().equals(AccessDeniedException.class)){
@@ -54,6 +56,7 @@ public class ClientConnection extends Thread {
 				e.printStackTrace();
 			}
 		} else if (type.equals("RRQ")) {
+
 			try {
 				file = getFilename(request);
 			} catch (FileNotFoundException e) {
@@ -64,6 +67,7 @@ public class ClientConnection extends Thread {
 				readRequest(request, file);
 			} catch (IOException e) {
 				String msg = e.getMessage();
+
 				if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
 					sendError(3,port);
 				} else if(e.getClass().equals(AccessDeniedException.class)){
@@ -74,7 +78,6 @@ public class ClientConnection extends Thread {
 				e.printStackTrace();
 			}
 		} else {
-			//TODO: ERROR handling!!
 			shutdown();
 		}
 

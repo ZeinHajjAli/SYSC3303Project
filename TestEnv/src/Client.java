@@ -2,7 +2,6 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
-import java.rmi.AccessException;
 import java.util.Scanner;
 
 public class Client
@@ -14,7 +13,7 @@ public class Client
 	private static FileInputStream myInputStream;
 	private static DatagramPacket lastPacket;
 	private static int port = 23;
-	private static final int timeout = 50000;
+	private static final int TIMEOUT = 50000;
 
 	public static void main(String[] args)
 	{
@@ -266,7 +265,7 @@ public class Client
 		//try/catch block for SocketException and UnknownHostException hat might arise from initializing the DatagramSocket and the InetAddress respectively
 		try {
 			socket = new DatagramSocket(listenPort, InetAddress.getByName("127.0.0.1"));
-			socket.setSoTimeout(timeout);
+			socket.setSoTimeout(TIMEOUT);
 		} catch (SocketException | UnknownHostException e) {
 			e.printStackTrace();
 		}
