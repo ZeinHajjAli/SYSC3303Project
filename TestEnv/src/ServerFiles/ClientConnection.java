@@ -5,6 +5,7 @@ import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import static java.lang.System.*;
 
@@ -17,7 +18,8 @@ public class ClientConnection extends Thread {
 	private static FileInputStream myInputStream;
 	private static DatagramPacket lastPacket;
 	private static int port;
-	private static final int TIMEOUT = 50000;
+	private static final int TIMEOUT = 0;
+	private static final String ServPath = ".\\Serv\\";
 
 	ClientConnection(DatagramPacket request){
 
@@ -49,6 +51,7 @@ public class ClientConnection extends Thread {
 					sendError(1, port);
 					e.printStackTrace();
 				}
+				encodeFilename(file);
 				try {
 					out.println("writeRequest");
 					writeRequest(file);
@@ -73,6 +76,7 @@ public class ClientConnection extends Thread {
 					sendError(1, port);
 					e.printStackTrace();
 				}
+				encodeFilename(file);
 				try {
 					readRequest(file);
 				} catch (IOException e) {
@@ -206,7 +210,11 @@ public class ClientConnection extends Thread {
 		return data;
 
 	}
-	
+
+	private String encodeFilename(String filename){
+		return ServPath + filename;
+	}
+
 	private void writeRequest(String filename) throws IOException{
 		byte data[] = new byte[512];
 		DatagramPacket received = new DatagramPacket(data, data.length);
@@ -265,7 +273,7 @@ public class ClientConnection extends Thread {
 		data[1] = 4;
 		data[2] = block[0];
 		data[3] = block[1];
-		DatagramPacket ACK =  new DatagramPacket(data, data.length, packet.getSocketAddress());
+		DatagramPacket ACK =  new DatagramPacket(data, data.length, packet.getAddress(), packet.getPort());
 		lastPacket = ACK;
 
 		try {

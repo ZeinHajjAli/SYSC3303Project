@@ -7,7 +7,7 @@ import static java.lang.System.*;
 public class ErrorSimulator
 {
 
-	private static final int TIMEOUT = 500;
+	private static final int TIMEOUT = 0;
 	private static DatagramSocket recSocket, servSocket, sendSocket;
 	private static final int REC_SOCK_PORT = 23;
 	private static final int SERV_SOCK_PORT = 25;

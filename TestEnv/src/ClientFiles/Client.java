@@ -6,6 +6,7 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import static java.lang.System.*;
 import static java.lang.System.exit;
@@ -20,9 +21,11 @@ public class Client
 	private static FileOutputStream fileWriter;
 	private static FileInputStream myInputStream;
 	private static DatagramPacket lastPacket;
-	private static int port = 23;
-	private static final int TIMEOUT = 50000;
+	private static int SEND_PORT = 23;
+	private static int REC_PORT = 81;
+	private static final int TIMEOUT = 0;
 	private static final int LISTEN_PORT = 24;
+	private static final String ClientPath = ".\\src\\Client\\";
 
 	public static void main(String[] args)
 	{
@@ -58,6 +61,7 @@ public class Client
 		try {
 			socket.send(packet);
 
+			filename = encodeFilename(filename);
 			if(WR == 1) {
 				readRequest(filename);
 			} else {
@@ -66,11 +70,11 @@ public class Client
 		} catch (IOException e) {
 			String msg = e.getMessage();
 			if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
-				sendError(3,port);
+				sendError(3,SEND_PORT);
 			} else if(e.getClass().equals(AccessDeniedException.class)){
-				sendError(2,port);
+				sendError(2,SEND_PORT);
 			} else if(e.getClass().equals(FileAlreadyExistsException.class)){
-				sendError(6,port);
+				sendError(6,SEND_PORT);
 			}
 			e.printStackTrace();
 		}
@@ -97,11 +101,9 @@ public class Client
 				cont = false;
 			}
 			if(cont) {
-				port = received.getPort();
-
 				switch (validatePacket(received)) {
 					case "DATA":
-						if (received.getPort() == port) {
+						if (received.getPort() == REC_PORT) {
 							byte[] receivedBytes = unpackReadData(received);
 							byte[] blockNumber = unpackBlockNumber(received);
 
@@ -194,14 +196,14 @@ public class Client
 				cont = false;
 			}
 			if(cont) {
-				port = received.getPort();
 
 				if (fileBytes.length < 508) {
 					keepSending = false;
 				}
 				switch (validatePacket(received)) {
 					case "ACK":
-						if (received.getPort() == port) {
+
+						if (received.getPort() == REC_PORT) {
 							byte[] blockNumber = unpackBlockNumber(received);
 							if (Arrays.equals(blockNumber, block)) {
 								block = nextBlock(block);
@@ -217,6 +219,7 @@ public class Client
 						shutdown();
 						break;
 					default:
+						out.println("DEFAULT");
 						keepSending = false;
 						out.println("There was an ERROR");
 						shutdown();
@@ -224,6 +227,7 @@ public class Client
 					//TODO: ERROR handling!!
 				}
 			}
+			out.println(keepSending);
 		}
 	}
 
@@ -247,14 +251,29 @@ public class Client
 		data[1] = 3;
 		data[2] = block[0];
 		data[3] = block[1];
+		int len;
+		if(fileBytes.length < 508){
+			len = fileBytes.length;
+		} else {
+			len = 508;
+		}
 
-		arraycopy(fileBytes, 0, data, 4, 509);
+		arraycopy(fileBytes, 0, data, 4, len);
 		packet.setData(data, 0, data.length);
 		lastPacket = packet;
+		packet.setPort(SEND_PORT);
+		printPacket(packet);
 		socket.send(packet);
-		byte[] changedFile = new byte[fileBytes.length - 508];
+		byte[] changedFile;
+		if(len >= 508){
+			changedFile = new byte[fileBytes.length - len];
 
-		arraycopy(fileBytes, 508, changedFile, 0, changedFile.length);
+			arraycopy(fileBytes, 508, changedFile, 0, changedFile.length);
+		} else {
+			changedFile = new byte[1];
+		}
+
+		out.println(len + " " + fileBytes.length + " " + changedFile.length);
 
 		return changedFile;
 	}
@@ -297,14 +316,19 @@ public class Client
 
 	//Creates the DatagramPacket following the guidelines in the assignment document
 	private static byte[] createArray(String filename) {
+		out.println(filename);
 		myInputStream = null;
 		File file = new File(filename);
 		try{
 			myInputStream = new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			sendError(1,port);
+			out.println(myInputStream.available());
+			//change catch back to filenotfound exception
+		} catch (IOException e) {
+			sendError(1,SEND_PORT);
 			e.printStackTrace();
 		}
+
+		out.println(file.length());
 
 		byte fileBytes[] = new byte[(int)file.length()];
 		try{
@@ -360,7 +384,7 @@ public class Client
 		}
 
 		//puts the final byte array into a new DatagramPacket and gives it the Address as well as the receiving port
-		DatagramPacket packet = new DatagramPacket(finalBytes, finalBytes.length, new InetSocketAddress("localhost",port));
+		DatagramPacket packet = new DatagramPacket(finalBytes, finalBytes.length, new InetSocketAddress("localhost",SEND_PORT));
 		printPacket(packet);
 
 		return packet;
@@ -384,6 +408,7 @@ public class Client
 		arraycopy(message, 0, data, 4, message.length + 4 - 4);
 		data[data.length-1] = 0;
 		DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress("localhost",port));
+		printPacket(send);
 		try {
 			socket.send(send);
 		} catch (IOException e) {
@@ -417,6 +442,17 @@ public class Client
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static String decodeFilename(String filename){
+		String separator = "\\";
+		String[] path = filename.split(Pattern.quote(separator));
+		filename = ClientPath + path[-1];
+		return filename;
+	}
+
+	private static String encodeFilename(String filename){
+		return ClientPath + filename;
 	}
 
 }
