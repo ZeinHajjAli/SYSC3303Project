@@ -23,7 +23,7 @@ public class Client
 	private static DatagramPacket lastPacket;
 	private static int SEND_PORT = 23;
 	private static int REC_PORT = 81;
-	private static final int TIMEOUT = 0;
+	private static final int TIMEOUT = 1000;
 	private static final int LISTEN_PORT = 24;
 	private static final String ClientPath = ".\\src\\Client\\";
 
