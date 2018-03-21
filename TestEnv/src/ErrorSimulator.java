@@ -7,17 +7,20 @@ import static java.lang.System.*;
 public class ErrorSimulator
 {
 
-	private static final int TIMEOUT = 1000;
+	private static final int TIMEOUT = 0;
 	private static DatagramSocket recSocket, servSocket, sendSocket;
 	private static final int REC_SOCK_PORT = 23;
 	private static final int SERV_SOCK_PORT = 25;
 	private static final int SEND_SOCK_PORT = 81;
-	private static int clientPort = 24;
-	private static int serverPort = 69;
+	private static int clientPort;
+	private static int serverPort;
 	private static DatagramPacket clientPacket;
 	private static DatagramPacket serverPacket;
 
 	public static void main(String args[]) {
+
+		clientPort = 24;
+		serverPort = 69;
 
 		try {
 			recSocket = new DatagramSocket(REC_SOCK_PORT);
@@ -87,7 +90,7 @@ public class ErrorSimulator
 			}
 			if (cont) {
 				clientPort = clientPacket.getPort();
-				data = new byte[clientPacket.getLength()];
+				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");

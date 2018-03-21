@@ -6,7 +6,6 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 import static java.lang.System.*;
 import static java.lang.System.exit;
@@ -442,13 +441,6 @@ public class Client
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static String decodeFilename(String filename){
-		String separator = "\\";
-		String[] path = filename.split(Pattern.quote(separator));
-		filename = ClientPath + path[-1];
-		return filename;
 	}
 
 	private static String encodeFilename(String filename){

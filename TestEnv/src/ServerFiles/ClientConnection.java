@@ -5,7 +5,6 @@ import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 import static java.lang.System.*;
 
@@ -24,9 +23,10 @@ public class ClientConnection extends Thread {
 	ClientConnection(DatagramPacket request){
 
 		this.request = request;
+        int random = (int )(Math.random() * 6000 + 5000);
 
 		try {
-			socket = new DatagramSocket();
+			socket = new DatagramSocket(random);
 			socket.setSoTimeout(TIMEOUT);
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -51,7 +51,7 @@ public class ClientConnection extends Thread {
 					sendError(1, port);
 					e.printStackTrace();
 				}
-				encodeFilename(file);
+				file = encodeFilename(file);
 				try {
 					out.println("writeRequest");
 					writeRequest(file);
@@ -76,7 +76,7 @@ public class ClientConnection extends Thread {
 					sendError(1, port);
 					e.printStackTrace();
 				}
-				encodeFilename(file);
+				file = encodeFilename(file);
 				try {
 					readRequest(file);
 				} catch (IOException e) {
@@ -130,40 +130,45 @@ public class ClientConnection extends Thread {
 		DatagramPacket received = new DatagramPacket(data, data.length);
 		byte[] fileBytes = createArray(filename);
 		boolean keepSending = true;
+		boolean cont;
 
 		while(keepSending) {
 			try {
 				socket.receive(received);
+				cont = true;
 			} catch(SocketTimeoutException e){
 				socket.send(lastPacket);
+				cont = false;
 			}
-			if(fileBytes.length < 508){
-				keepSending = false;
-			}
-			switch (validatePacket(received)) {
-				case "ACK":
-					byte[] blockNumber = unpackBlockNumber(received);
-					if (received.getPort() == port) {
-						if (Arrays.equals(blockNumber, block)) {
-							block = nextBlock(block);
-							fileBytes = sendData(fileBytes, received);
-						}
-					} else {
-						sendError(5, received.getPort());
-					}
-					break;
-				case "ERROR":
-					keepSending = false;
-					out.println("Server had an error");
-					shutdown();
-					break;
-				default:
-					keepSending = false;
-					out.println("There was an ERROR");
-					//TODO: ERROR handling!!
-					shutdown();
-					break;
-			}
+			if(cont) {
+                if (fileBytes.length < 508) {
+                    keepSending = false;
+                }
+                switch (validatePacket(received)) {
+                    case "ACK":
+                        byte[] blockNumber = unpackBlockNumber(received);
+                        if (received.getPort() == port) {
+                            if (Arrays.equals(blockNumber, block)) {
+                                block = nextBlock(block);
+                                fileBytes = sendData(fileBytes, received);
+                            }
+                        } else {
+                            sendError(5, received.getPort());
+                        }
+                        break;
+                    case "ERROR":
+                        keepSending = false;
+                        out.println("Server had an error");
+                        shutdown();
+                        break;
+                    default:
+                        keepSending = false;
+                        out.println("There was an ERROR");
+                        //TODO: ERROR handling!!
+                        shutdown();
+                        break;
+                }
+            }
 		}
 	}
 
@@ -219,6 +224,7 @@ public class ClientConnection extends Thread {
 		byte data[] = new byte[512];
 		DatagramPacket received = new DatagramPacket(data, data.length);
 		boolean keepReceiving = true;
+		boolean cont;
 		File newFile = new File(filename);
 		newFile.createNewFile();
 		fileWriter = new FileOutputStream(filename);
@@ -227,42 +233,45 @@ public class ClientConnection extends Thread {
 
 			try {
 				socket.receive(received);
+				cont = true;
 			} catch (SocketTimeoutException e) {
-				sendACK(received);
+				sendACK(lastPacket);
+				cont = false;
 			}
+			if(cont) {
+                switch (validatePacket(received)) {
+                    case "DATA":
+                        if (received.getPort() == port) {
+                            byte[] receivedBytes = unpackReadData(received);
+                            byte[] blockNumber = unpackBlockNumber(received);
 
-			switch (validatePacket(received)) {
-				case "DATA":
-					if (received.getPort() == port) {
-						byte[] receivedBytes = unpackReadData(received);
-						byte[] blockNumber = unpackBlockNumber(received);
-
-						if (Arrays.equals(blockNumber, nextBlock(block))) {
-							if (receivedBytes.length < 508) {
-								keepReceiving = false;
-							}
-							block = nextBlock(block);
-							fileWriter.write(receivedBytes);
-							sendACK(received);
-						} else if (Arrays.equals(blockNumber, block)) {
-							sendACK(received);
-						}  //TODO: ERROR maybe?
-					} else {
-						sendError(5, received.getPort());
-					}
-					break;
-				case "ERROR":
-					keepReceiving = false;
-					out.println("Client had an ERROR");
-					shutdown();
-					break;
-				default:
-					keepReceiving = false;
-					out.println("There was an ERROR");
-					//TODO: ERROR handling!!
-					shutdown();
-					break;
-			}
+                            if (Arrays.equals(blockNumber, nextBlock(block))) {
+                                if (receivedBytes.length < 508) {
+                                    keepReceiving = false;
+                                }
+                                block = nextBlock(block);
+                                fileWriter.write(receivedBytes);
+                                sendACK(received);
+                            } else if (Arrays.equals(blockNumber, block)) {
+                                sendACK(received);
+                            }  //TODO: ERROR maybe?
+                        } else {
+                            sendError(5, received.getPort());
+                        }
+                        break;
+                    case "ERROR":
+                        keepReceiving = false;
+                        out.println("Client had an ERROR");
+                        shutdown();
+                        break;
+                    default:
+                        keepReceiving = false;
+                        out.println("There was an ERROR");
+                        //TODO: ERROR handling!!
+                        shutdown();
+                        break;
+                }
+            }
 		}
 	}
 	
