@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import static java.lang.System.*;
 
-public class ClientConnection extends Thread {
+class ClientConnection extends Thread {
 
 	private DatagramPacket request;
 	private DatagramSocket socket;
@@ -37,7 +37,7 @@ public class ClientConnection extends Thread {
 	
 	public void run(){
 
-		out.println("ClientConnection running");
+		out.println("ServerFiles.ClientConnection running");
 
 		port = request.getPort();
 		String type = validatePacket(request);
@@ -86,18 +86,19 @@ public class ClientConnection extends Thread {
 
 		byte[] data = packet.getData();
 		if(data[0]==0){
-			if(data[1]==1){
-				return "RRQ";
-			}else if(data[1]==2){
-				return "WRQ";
-			}else if(data[1]==3){
-				return "DATA";
-			}else if(data[1]==4){
-				return "ACK";
-			}else if(data[1]==5){
-				return "ERROR";
-			}else{
-				return "INVALID";
+			switch (data[1]) {
+				case 1:
+					return "RRQ";
+				case 2:
+					return "WRQ";
+				case 3:
+					return "DATA";
+				case 4:
+					return "ACK";
+				case 5:
+					return "ERROR";
+				default:
+					return "INVALID";
 			}
 		}else{
 			return "INVALID";
@@ -174,14 +175,22 @@ public class ClientConnection extends Thread {
 		String errorMessage;
 		byte[] data;
 		switch(code){
-			case 0: errorMessage =	"UNKNOWN ERROR";
-			case 1: errorMessage =	"File Not Found";
-			case 2: errorMessage =	"Access Violation";
-			case 3: errorMessage =	"Disk Full/Allocation Exceeded";
-			case 4: errorMessage =	"Illegal TFTP Operation";
-			case 5: errorMessage =	"Unknown Transfer ID";
-			case 6: errorMessage =	"File Already Exists";
-			case 7: errorMessage =	"No Such User";
+			case 0: //noinspection UnusedAssignment
+				errorMessage =	"UNKNOWN ERROR";
+			case 1: //noinspection UnusedAssignment
+				errorMessage =	"File Not Found";
+			case 2: //noinspection UnusedAssignment
+				errorMessage =	"Access Violation";
+			case 3: //noinspection UnusedAssignment
+				errorMessage =	"Disk Full/Allocation Exceeded";
+			case 4: //noinspection UnusedAssignment
+				errorMessage =	"Illegal TFTP Operation";
+			case 5: //noinspection UnusedAssignment
+				errorMessage =	"Unknown Transfer ID";
+			case 6: //noinspection UnusedAssignment
+				errorMessage =	"File Already Exists";
+			case 7: //noinspection UnusedAssignment
+				errorMessage =	"No Such User";
 			default: errorMessage =	"Unknown Error";
 		}
 		byte[] message = errorMessage.getBytes();
@@ -334,7 +343,9 @@ public class ClientConnection extends Thread {
 			out.println(myInputStream.available());
 			//change catch back to filenotfound exception
 		} catch (IOException e) {
-			sendError(1, REC_PORT);
+			if(e.getClass().equals(FileNotFoundException.class)) {
+				sendError(1, REC_PORT);
+			}
 			e.printStackTrace();
 		}
 

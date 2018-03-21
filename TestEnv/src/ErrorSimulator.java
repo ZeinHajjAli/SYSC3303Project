@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 import static java.lang.System.*;
 
-public class ErrorSimulator {
+class ErrorSimulator {
 
 	private static final int TIMEOUT = 100;
 	private static DatagramSocket recSocket, servSocket, sendSocket;

@@ -7,16 +7,15 @@ import java.util.*;
 import static java.lang.System.*;
 
 
-public class Server {
+class Server {
 
 	private static DatagramSocket recSocket;
-	private static DatagramPacket receivedPacket;
-	private static final int TIMEOUT = 0;
+    private static final int TIMEOUT = 0;
 
 	public static void main(String[] args){
 
 		byte[] data = new byte[512];
-		receivedPacket = new DatagramPacket(data, data.length);
+        DatagramPacket receivedPacket = new DatagramPacket(data, data.length);
 		Scanner scanner = new Scanner(in);
 		
 		try {
@@ -36,7 +35,7 @@ public class Server {
 				e.printStackTrace();
 			}
 
-			new ClientConnection(receivedPacket).start();
+			new ServerFiles.ClientConnection(receivedPacket).start();
 
 			if (scanner.hasNext()){
 				String input = scanner.next();

@@ -8,11 +8,8 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 import static java.lang.System.*;
-import static java.lang.System.exit;
-import static java.lang.System.in;
-import static java.lang.System.out;
 
-public class Client
+class Client
 {
 
 	private static DatagramSocket socket;
@@ -24,7 +21,7 @@ public class Client
 	private static int REC_PORT = 81;
 	private static final int TIMEOUT = 1000;
 	private static final int LISTEN_PORT = 24;
-	private static final String ClientPath = ".\\src\\Client\\";
+	private static final String ClientPath = ".\\src\\ClientFiles.Client\\";
 
 	public static void main(String[] args)
 	{
@@ -53,7 +50,7 @@ public class Client
 		mode = reader.next();
 
 		reader.close();
-		createSocket(LISTEN_PORT);
+		createSocket();
 		DatagramPacket packet = formRequest(WR, filename,mode);
 		lastPacket = packet;
 
@@ -301,12 +298,12 @@ public class Client
 	}
 
 	//Method to initialize socket
-	private static void createSocket(int listenPort)
+	private static void createSocket()
 	{
 		socket = null;
 		//try/catch block for SocketException and UnknownHostException hat might arise from initializing the DatagramSocket and the InetAddress respectively
 		try {
-			socket = new DatagramSocket(listenPort, InetAddress.getByName("127.0.0.1"));
+			socket = new DatagramSocket(LISTEN_PORT, InetAddress.getByName("127.0.0.1"));
 			socket.setSoTimeout(TIMEOUT);
 		} catch (SocketException | UnknownHostException e) {
 			e.printStackTrace();
