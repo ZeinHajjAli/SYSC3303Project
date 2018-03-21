@@ -19,7 +19,7 @@ public class ClientConnection extends Thread {
 	private static DatagramPacket lastPacket;
 	private static int port;
 	private static final int TIMEOUT = 1000;
-	private static final String ServPath = ".\\Serv\\";
+	private static final String ServPath = ".\\src\\Serv\\";
 
 	ClientConnection(DatagramPacket request){
 
