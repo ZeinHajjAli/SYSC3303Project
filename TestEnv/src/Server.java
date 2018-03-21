@@ -1,5 +1,3 @@
-package ServerFiles;
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -35,7 +33,7 @@ class Server {
 				e.printStackTrace();
 			}
 
-			new ServerFiles.ClientConnection(receivedPacket).start();
+			new ClientConnection(receivedPacket).start();
 
 			if (scanner.hasNext()){
 				String input = scanner.next();

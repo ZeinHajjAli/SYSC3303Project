@@ -8,12 +8,16 @@ import java.net.InetSocketAddress;
 import static java.lang.System.arraycopy;
 import static java.lang.System.out;
 
-abstract class socketOperations {
+class TFTPHandler {
 
-    protected byte[] block = {0,0};
+    protected byte[] block;
     protected DatagramSocket socket;
     protected DatagramPacket lastPacket;
-    protected static int SEND_PORT = 23;
+
+    TFTPHandler()
+    {
+        block = new byte[]{0,0};
+    }
 
     protected void printPacket(DatagramPacket p)
     {
@@ -62,7 +66,7 @@ abstract class socketOperations {
         return data;
     }
 
-    protected byte[] sendData(byte[] fileBytes, DatagramPacket packet) throws IOException
+    protected byte[] sendData(byte[] fileBytes, DatagramPacket packet, DatagramPacket request) throws IOException
     {
         byte[] data = new byte[512];
         data[0] = 0;
@@ -78,8 +82,9 @@ abstract class socketOperations {
 
         arraycopy(fileBytes, 0, data, 4, len);
         packet.setData(data, 0, data.length);
+        packet.setAddress(request.getAddress());
+        packet.setPort(request.getPort());
         lastPacket = packet;
-        packet.setPort(SEND_PORT);
         printPacket(packet);
         socket.send(packet);
         byte[] changedFile;
@@ -118,9 +123,23 @@ abstract class socketOperations {
         String errorMessage;
         byte[] data;
         switch(code){
-            case 5: errorMessage = "	Wrong Number (ERROR: 05)	";
-                break;
-            default: errorMessage = "	Unknown Error	";
+            case 0: //noinspection UnusedAssignment
+                errorMessage =	"UNKNOWN ERROR";
+            case 1: //noinspection UnusedAssignment
+                errorMessage =	"File Not Found";
+            case 2: //noinspection UnusedAssignment
+                errorMessage =	"Access Violation";
+            case 3: //noinspection UnusedAssignment
+                errorMessage =	"Disk Full/Allocation Exceeded";
+            case 4: //noinspection UnusedAssignment
+                errorMessage =	"Illegal TFTP Operation";
+            case 5: //noinspection UnusedAssignment
+                errorMessage =	"Unknown Transfer ID";
+            case 6: //noinspection UnusedAssignment
+                errorMessage =	"File Already Exists";
+            case 7: //noinspection UnusedAssignment
+                errorMessage =	"No Such User";
+            default: errorMessage =	"Unknown Error";
         }
         byte[] message = errorMessage.getBytes();
         data = new byte[5 + message.length];
@@ -128,10 +147,12 @@ abstract class socketOperations {
         data[1] = 5;
         data[2] = 0;
         data[3] = (byte) code;
+
         arraycopy(message, 0, data, 4, message.length + 4 - 4);
         data[data.length-1] = 0;
         DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress("localhost",port));
-        printPacket(send);
+        lastPacket = send;
+
         try {
             socket.send(send);
         } catch (IOException e) {
@@ -140,7 +161,7 @@ abstract class socketOperations {
     }
 
     //Creates the DatagramPacket following the guidelines in the assignment document
-    protected byte[] createArray(String filename) {
+    protected byte[] createArray(String filename, int port) {
         out.println(filename);
         FileInputStream myInputStream = null;
         File file = new File(filename);
@@ -149,7 +170,7 @@ abstract class socketOperations {
             out.println(myInputStream.available());
             //change catch back to filenotfound exception
         } catch (IOException e) {
-            sendError(1,SEND_PORT);
+            sendError(1, port);
             e.printStackTrace();
         }
 
@@ -189,11 +210,8 @@ abstract class socketOperations {
         }
     }
 
-    protected abstract String encodeFilename(String filename);
-
-    protected abstract void readRequest(String filename);
-
-    protected abstract void writeRequest(String filename);
-
+    protected void close() throws IOException {
+        //TODO: close() method
+    }
 
 }

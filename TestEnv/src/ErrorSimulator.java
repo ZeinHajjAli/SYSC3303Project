@@ -4,7 +4,8 @@ import java.util.Scanner;
 
 import static java.lang.System.*;
 
-class ErrorSimulator {
+class ErrorSimulator extends TFTPHandler
+{
 
 	private static final int TIMEOUT = 100;
 	private static DatagramSocket recSocket, servSocket, sendSocket;
@@ -16,11 +17,13 @@ class ErrorSimulator {
 	private static DatagramPacket clientPacket;
 	private static DatagramPacket serverPacket;
 	private static Scanner input;
+	private static TFTPHandler handler;
 
 	public static void main(String args[]) {
 
 		clientPort = 24;
 		serverPort = 69;
+		handler = new TFTPHandler();
 
 		try {
 			recSocket = new DatagramSocket(REC_SOCK_PORT);
@@ -96,7 +99,7 @@ class ErrorSimulator {
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
-				printPacket(clientPacket);
+				handler.printPacket(clientPacket);
 				//sends the packet on to the server
 				servSocket.send(clientPacket);
 			}
@@ -113,10 +116,10 @@ class ErrorSimulator {
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
 				serverPacket.setPort(clientPort);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				//sends packet from the server on to the client
 				sendSocket.send(serverPacket);
 				sendSocket.close();
@@ -152,7 +155,7 @@ class ErrorSimulator {
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
-				printPacket(clientPacket);
+				handler.printPacket(clientPacket);
 				//sends the packet on to the server
 				if (counter != packetNumber) {
 					servSocket.send(clientPacket);
@@ -172,11 +175,11 @@ class ErrorSimulator {
 				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				//sends packet from the server on to the client
 				if (counter != packetNumber) {
 					sendSocket.send(serverPacket);
@@ -214,7 +217,7 @@ class ErrorSimulator {
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
-				printPacket(clientPacket);
+				handler.printPacket(clientPacket);
 				//sends the packet on to the server
 				if (counter == packetNumber) {
 					try {
@@ -239,11 +242,11 @@ class ErrorSimulator {
 				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				//sends packet from the server on to the client
 				if (counter == packetNumber) {
 					try {
@@ -285,7 +288,7 @@ class ErrorSimulator {
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
-				printPacket(clientPacket);
+				handler.printPacket(clientPacket);
 				//sends the packet on to the server
 				servSocket.send(clientPacket);
 				if (counter == packetNumber) {
@@ -311,11 +314,11 @@ class ErrorSimulator {
 				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
-				printPacket(serverPacket);
+				handler.printPacket(serverPacket);
 				//sends packet from the server on to the client
 				sendSocket.send(serverPacket);
 				if (counter == packetNumber) {
@@ -330,16 +333,6 @@ class ErrorSimulator {
 			}
 			handleQuit();
 		}
-	}
-
-	private static byte[] unpackBlockNumber(DatagramPacket packet)
-	{
-		byte[] packetData = packet.getData();
-		byte[] data = new byte[2];
-		data[0] = packetData[2];
-		data[1] = packetData[3];
-
-		return data;
 	}
 
 	private static void handleQuit() {
@@ -362,22 +355,6 @@ class ErrorSimulator {
 		input.close();
 		exit(0);
 
-	}
-
-	//same method as the one found in the client class
-	private static void printPacket(DatagramPacket p)
-	{
-		byte[] receivedBytes = p.getData();
-		out.println("Data being sent/received in bytes: ");
-
-		for(byte element : receivedBytes) {
-			out.print(element);
-		}
-		out.println();
-		String receivedString = new String(receivedBytes);
-		out.println("Data being sent/received: " + receivedString);
-		out.println("from/to address: " + p.getAddress());
-		out.println("Port Number: " + p.getPort());
 	}
 }
 
