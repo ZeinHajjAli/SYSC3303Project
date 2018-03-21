@@ -4,10 +4,9 @@ import java.util.Scanner;
 
 import static java.lang.System.*;
 
-public class ErrorSimulator
-{
+public class ErrorSimulator {
 
-	private static final int TIMEOUT = 0;
+	private static final int TIMEOUT = 100;
 	private static DatagramSocket recSocket, servSocket, sendSocket;
 	private static final int REC_SOCK_PORT = 23;
 	private static final int SERV_SOCK_PORT = 25;
@@ -16,6 +15,7 @@ public class ErrorSimulator
 	private static int serverPort;
 	private static DatagramPacket clientPacket;
 	private static DatagramPacket serverPacket;
+	private static Scanner input;
 
 	public static void main(String args[]) {
 
@@ -35,7 +35,7 @@ public class ErrorSimulator
 		clientPacket = new DatagramPacket(data, data.length);
 		serverPacket = new DatagramPacket(data, data.length);
 
-		Scanner input = new Scanner(in);
+		input = new Scanner(in);
 
 		out.println("What mode: ");
 		out.println("0: Normal Mode");
@@ -64,12 +64,12 @@ public class ErrorSimulator
 
 				}
 			}
-		} catch (IOException e){
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 	}
-	
+
 	private static void normalMode() throws IOException {
 
 		out.println("Started Normal Mode");
@@ -90,6 +90,7 @@ public class ErrorSimulator
 			}
 			if (cont) {
 				clientPort = clientPacket.getPort();
+				out.println(clientPort);
 				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
@@ -108,11 +109,11 @@ public class ErrorSimulator
 			}
 			if (cont) {
 				serverPort = serverPacket.getPort();
-				data = new byte[serverPacket.getLength()];
+				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
+				printPacket(serverPacket);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
 				printPacket(serverPacket);
@@ -120,10 +121,12 @@ public class ErrorSimulator
 				sendSocket.send(serverPacket);
 				sendSocket.close();
 			}
+
+			//handleQuit();
 		}
 	}
 
-	private static void losePacket(int packetNumber) throws IOException{
+	private static void losePacket(int packetNumber) throws IOException {
 
 		out.println("Started losePacket");
 
@@ -133,18 +136,18 @@ public class ErrorSimulator
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
 
-		while(true) {
+		while (true) {
 			try {
 				//waits to receive a packet from the client
 				recSocket.receive(clientPacket);
 				counter++;
 				cont = true;
-			} catch (SocketTimeoutException e){
+			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
-			if(cont) {
+			if (cont) {
 				clientPort = clientPacket.getPort();
-				data = new byte[clientPacket.getLength()];
+				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");
@@ -161,12 +164,12 @@ public class ErrorSimulator
 				recSocket.receive(clientPacket);
 				counter++;
 				cont = true;
-			} catch (SocketTimeoutException e){
+			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
-			if(cont) {
+			if (cont) {
 				serverPort = serverPacket.getPort();
-				data = new byte[serverPacket.getLength()];
+				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
 				printPacket(serverPacket);
@@ -180,10 +183,11 @@ public class ErrorSimulator
 				}
 				sendSocket.close();
 			}
+			handleQuit();
 		}
 	}
 
-	private static void delayPacket(int packetNumber, int delay) throws IOException{
+	private static void delayPacket(int packetNumber, int delay) throws IOException {
 
 		out.println("Started delayPacket");
 
@@ -193,19 +197,19 @@ public class ErrorSimulator
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
 
-		while(true) {
+		while (true) {
 
 			try {
 				//waits to receive a packet from the client
 				recSocket.receive(clientPacket);
 				counter++;
 				cont = true;
-			} catch (SocketTimeoutException e){
+			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
-			if(cont) {
+			if (cont) {
 				clientPort = clientPacket.getPort();
-				data = new byte[clientPacket.getLength()];
+				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");
@@ -227,12 +231,12 @@ public class ErrorSimulator
 				servSocket.receive(serverPacket);
 				counter++;
 				cont = true;
-			} catch(SocketTimeoutException e){
+			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
-			if(cont) {
+			if (cont) {
 				serverPort = serverPacket.getPort();
-				data = new byte[serverPacket.getLength()];
+				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
 				printPacket(serverPacket);
@@ -251,10 +255,11 @@ public class ErrorSimulator
 				sendSocket.send(serverPacket);
 				sendSocket.close();
 			}
+			handleQuit();
 		}
 	}
 
-	private static void duplicatePacket(int packetNumber, int delay) throws IOException{
+	private static void duplicatePacket(int packetNumber, int delay) throws IOException {
 
 		out.println("Started duplicatePacket");
 
@@ -264,18 +269,18 @@ public class ErrorSimulator
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
 
-		while(true) {
+		while (true) {
 			try {
 				//waits to receive a packet from the client
 				recSocket.receive(clientPacket);
 				counter++;
 				cont = true;
-			} catch (SocketTimeoutException e){
+			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
-			if(cont) {
+			if (cont) {
 				clientPort = clientPacket.getPort();
-				data = new byte[clientPacket.getLength()];
+				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");
@@ -298,12 +303,12 @@ public class ErrorSimulator
 				recSocket.receive(clientPacket);
 				counter++;
 				cont = true;
-			} catch (SocketTimeoutException e){
+			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
-			if(cont) {
+			if (cont) {
 				serverPort = serverPacket.getPort();
-				data = new byte[serverPacket.getLength()];
+				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
 				printPacket(serverPacket);
@@ -323,7 +328,40 @@ public class ErrorSimulator
 				}
 				sendSocket.close();
 			}
+			handleQuit();
 		}
+	}
+
+	private static byte[] unpackBlockNumber(DatagramPacket packet)
+	{
+		byte[] packetData = packet.getData();
+		byte[] data = new byte[2];
+		data[0] = packetData[2];
+		data[1] = packetData[3];
+
+		return data;
+	}
+
+	private static void handleQuit() {
+
+		if(input.hasNext()) {
+			String scannedInput = input.next();
+
+			if (scannedInput.equalsIgnoreCase("q")) {
+				out.println("user has terminated the server. Shutting down");
+				shutdown();
+			}
+		}
+	}
+
+	private static void shutdown(){
+
+		recSocket.close();
+		servSocket.close();
+		sendSocket.close();
+		input.close();
+		exit(0);
+
 	}
 
 	//same method as the one found in the client class

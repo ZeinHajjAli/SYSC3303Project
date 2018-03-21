@@ -19,6 +19,8 @@ public class ClientConnection extends Thread {
 	private static int port;
 	private static final int TIMEOUT = 1000;
 	private static final String ServPath = ".\\src\\Serv\\";
+	private static int REC_PORT = 25;
+	private static InetAddress localhost;
 
 	ClientConnection(DatagramPacket request){
 
@@ -41,64 +43,42 @@ public class ClientConnection extends Thread {
 		String type = validatePacket(request);
 		String file = null;
 
-		switch (type) {
-			case "WRQ":
-				sendACK(request);
+		try {
+			file = getFilename(request);
+		} catch (FileNotFoundException e) {
+			sendError(1, port);
+			e.printStackTrace();
+		}
+		file = encodeFilename(file);
 
-				try {
-					file = getFilename(request);
-				} catch (FileNotFoundException e) {
-					sendError(1, port);
-					e.printStackTrace();
-				}
-				file = encodeFilename(file);
-				try {
+		try {
+			localhost = InetAddress.getByName("127.0.0.1");
+			switch (type) {
+				case "WRQ":
+					sendACK(request);
 					out.println("writeRequest");
 					writeRequest(file);
-				} catch (IOException e) {
-					String msg = e.getMessage();
-
-					if (msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")) {
-						sendError(3, port);
-					} else if (e.getClass().equals(AccessDeniedException.class)) {
-						sendError(2, port);
-					} else if (e.getClass().equals(FileAlreadyExistsException.class)) {
-						sendError(6, port);
-					}
-					e.printStackTrace();
-				}
-				break;
-			case "RRQ":
-
-				try {
-					file = getFilename(request);
-				} catch (FileNotFoundException e) {
-					sendError(1, port);
-					e.printStackTrace();
-				}
-				file = encodeFilename(file);
-				try {
+					break;
+				case "RRQ":
+					out.println("Read Request");
 					readRequest(file);
-				} catch (IOException e) {
-					String msg = e.getMessage();
+					break;
+				default:
+					shutdown();
+					break;
+			}
+		} catch (IOException e) {
+			String msg = e.getMessage();
 
-					if (msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")) {
-						sendError(3, port);
-					} else if (e.getClass().equals(AccessDeniedException.class)) {
-						sendError(2, port);
-					} else if (e.getClass().equals(FileAlreadyExistsException.class)) {
-						sendError(6, port);
-					}
-					e.printStackTrace();
-				}
-				break;
-			default:
-				shutdown();
-				break;
+			if (msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")) {
+				sendError(3, port);
+			} else if (e.getClass().equals(AccessDeniedException.class)) {
+				sendError(2, port);
+			} else if (e.getClass().equals(FileAlreadyExistsException.class)) {
+				sendError(6, port);
+			}
+			e.printStackTrace();
 		}
-
-		
-		
 	}
 
 	private String validatePacket(DatagramPacket packet)
@@ -128,47 +108,64 @@ public class ClientConnection extends Thread {
 	private void readRequest(String filename) throws IOException{
 		byte data[] = new byte[512];
 		DatagramPacket received = new DatagramPacket(data, data.length);
-		byte[] fileBytes = createArray(filename);
+		byte[] fileBytes;
+		fileBytes = createArray(filename);
 		boolean keepSending = true;
-		boolean cont;
+		boolean cont = true;
+		boolean first = true;
 
 		while(keepSending) {
-			try {
-				socket.receive(received);
-				cont = true;
-			} catch(SocketTimeoutException e){
-				socket.send(lastPacket);
-				cont = false;
+			if(!first) {
+				try {
+					socket.receive(received);
+					cont = true;
+				} catch (SocketTimeoutException e) {
+					if (lastPacket != null) {
+						socket.send(lastPacket);
+					}
+					cont = false;
+				}
 			}
 			if(cont) {
-                if (fileBytes.length < 508) {
-                    keepSending = false;
-                }
-                switch (validatePacket(received)) {
-                    case "ACK":
-                        byte[] blockNumber = unpackBlockNumber(received);
-                        if (received.getPort() == port) {
-                            if (Arrays.equals(blockNumber, block)) {
-                                block = nextBlock(block);
-                                fileBytes = sendData(fileBytes, received);
-                            }
-                        } else {
-                            sendError(5, received.getPort());
-                        }
-                        break;
-                    case "ERROR":
-                        keepSending = false;
-                        out.println("Server had an error");
-                        shutdown();
-                        break;
-                    default:
-                        keepSending = false;
-                        out.println("There was an ERROR");
-                        //TODO: ERROR handling!!
-                        shutdown();
-                        break;
-                }
-            }
+
+				if (fileBytes.length < 508) {
+					keepSending = false;
+				}
+				if(first){
+					block = nextBlock(block);
+					received.setPort(REC_PORT);
+					fileBytes = sendData(fileBytes, received);
+					first = false;
+				} else {
+					switch (validatePacket(received)) {
+						case "ACK":
+
+							if (received.getPort() == REC_PORT) {
+								byte[] blockNumber = unpackBlockNumber(received);
+								if (Arrays.equals(blockNumber, block)) {
+									block = nextBlock(block);
+									fileBytes = sendData(fileBytes, received);
+								}
+							} else {
+								sendError(5, received.getPort());
+							}
+							break;
+						case "ERROR":
+							keepSending = false;
+							out.println("Server had an error");
+							shutdown();
+							break;
+						default:
+							out.println("DEFAULT");
+							keepSending = false;
+							out.println("There was an ERROR");
+							shutdown();
+							break;
+						//TODO: ERROR handling!!
+					}
+				}
+			}
+			out.println(keepSending);
 		}
 	}
 
@@ -197,6 +194,7 @@ public class ClientConnection extends Thread {
 		arraycopy(message, 0, data, 4, message.length + 4 - 4);
 		data[data.length-1] = 0;
 		DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress("localhost",port));
+		lastPacket = send;
 
 		try {
 			socket.send(send);
@@ -299,29 +297,48 @@ public class ClientConnection extends Thread {
 		data[1] = 3;
 		data[2] = block[0];
 		data[3] = block[1];
+		int len;
+		if(fileBytes.length < 508){
+			len = fileBytes.length;
+		} else {
+			len = 508;
+		}
 
-		arraycopy(fileBytes, 0, data, 4, 509);
+		arraycopy(fileBytes, 0, data, 4, len);
 		packet.setData(data, 0, data.length);
+		packet.setAddress(localhost);
 		lastPacket = packet;
+		packet.setPort(REC_PORT);
 		socket.send(packet);
-		byte[] changedFile = new byte[fileBytes.length - 508];
+		byte[] changedFile;
+		if(len >= 508){
+			changedFile = new byte[fileBytes.length - len];
 
-		arraycopy(fileBytes, 508, changedFile, 0, changedFile.length);
+			arraycopy(fileBytes, 508, changedFile, 0, changedFile.length);
+		} else {
+			changedFile = new byte[1];
+		}
+
+		out.println(len + " " + fileBytes.length + " " + changedFile.length);
 
 		return changedFile;
 	}
 	
 	//Creates the DatagramPacket following the guidelines in the assignment document
-	private byte[] createArray(String filename)
-	{
+	private byte[] createArray(String filename) {
+		out.println(filename);
 		myInputStream = null;
 		File file = new File(filename);
 		try{
 			myInputStream = new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			sendError(1, port);
+			out.println(myInputStream.available());
+			//change catch back to filenotfound exception
+		} catch (IOException e) {
+			sendError(1, REC_PORT);
 			e.printStackTrace();
 		}
+
+		out.println(file.length());
 
 		byte fileBytes[] = new byte[(int)file.length()];
 		try{
