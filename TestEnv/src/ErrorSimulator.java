@@ -1,12 +1,13 @@
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import static java.lang.System.*;
 
 public class ErrorSimulator {
 
-	private static final int TIMEOUT = 1000;
+	private static final int TIMEOUT = 50;
 	private static DatagramSocket recSocket, servSocket, sendSocket;
 	private static final int REC_SOCK_PORT = 23;
 	private static final int SERV_SOCK_PORT = 25;
@@ -49,19 +50,23 @@ public class ErrorSimulator {
 			if (mode == 0) {
 				normalMode();
 			} else {
-				out.println("What packet do you want to lose/delay/duplicate? (packet numbering starts at 1) ");
-				int packetNumber = input.nextInt();
-				if (mode == 1) {
-					losePacket(packetNumber);
-				}
-				out.println("How long to delay? (milliseconds)");
-				int delay = input.nextInt();
-				switch (mode) {
-					case 2:
-						delayPacket(packetNumber, delay);
-					case 3:
-						duplicatePacket(packetNumber, delay);
+				out.println("What packet do you want to lose/delay/duplicate? (block numbering starts at 0) ");
+				byte[] blockNumber = getBlockNumber(input.nextInt());
+				out.println("Lose/Delay/Duplicate clients packet or servers? (Client: 1 | Server: 2) ");
+				int side = input.nextInt();
 
+				if (mode == 1) {
+					losePacket(blockNumber, side);
+				} else {
+					out.println("How long to delay? (milliseconds)");
+					int delay = input.nextInt();
+					switch (mode) {
+						case 2:
+							delayPacket(blockNumber, side, delay);
+						case 3:
+							duplicatePacket(blockNumber, side, delay);
+
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -131,43 +136,51 @@ public class ErrorSimulator {
 		}
 	}
 
-	private static void losePacket(int packetNumber) throws IOException {
-
-		out.println("Started losePacket");
+	private static void losePacket(byte[] blockNumber, int side) throws IOException {
+		out.println("Started losePacket ");
 
 		byte[] data;
-		int counter = 0;
 		boolean cont;
+		boolean lost = false;
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
+		byte[] newArr;
+		byte[] packetBlock = null;
 
 		while (true) {
+			//waits to receive a packet from the client
+
 			try {
-				//waits to receive a packet from the client
+				newArr = new byte[512];
+				clientPacket = new DatagramPacket(newArr, newArr.length);
 				recSocket.receive(clientPacket);
-				counter++;
+				packetBlock = unpackBlockNumber(clientPacket);
 				cont = true;
 			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
 			if (cont) {
 				clientPort = clientPacket.getPort();
+				out.println(clientPort);
 				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
 				printPacket(clientPacket);
-				//sends the packet on to the server
-				if (counter != packetNumber) {
+				if((Arrays.equals(packetBlock, blockNumber) && side==1) && !lost){
+					lost = true;
+					out.println("Lost Client packet with block number " + blockNumber[0] + blockNumber[1]);
+				} else {
+					//sends the packet on to the server
 					servSocket.send(clientPacket);
 				}
 			}
-
 			try {
-				//waits to receive a packet from the client
-				recSocket.receive(clientPacket);
-				counter++;
+				newArr = new byte[512];
+				serverPacket = new DatagramPacket(newArr, newArr.length);
+				//waits to receive a packet from the server
+				servSocket.receive(serverPacket);
 				cont = true;
 			} catch (SocketTimeoutException e) {
 				cont = false;
@@ -177,64 +190,76 @@ public class ErrorSimulator {
 				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
+				printPacket(serverPacket);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
 				printPacket(serverPacket);
 				//sends packet from the server on to the client
-				if (counter != packetNumber) {
+				if((Arrays.equals(packetBlock, blockNumber) && side==2) && !lost){
+					lost = true;
+					out.println("Lost Server packet with block number " + blockNumber[0] + blockNumber[1]);
+				} else {
 					sendSocket.send(serverPacket);
 				}
 				sendSocket.close();
 			}
-			handleQuit();
+
+			//handleQuit();
 		}
 	}
 
-	private static void delayPacket(int packetNumber, int delay) throws IOException {
-
+	private static void delayPacket(byte[] blockNumber, int side, int delay) throws IOException {
 		out.println("Started delayPacket");
 
 		byte[] data;
-		int counter = 0;
 		boolean cont;
+		boolean delayed = false;
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
+		byte[] newArr;
+		byte[] packetBlock = null;
 
 		while (true) {
+			//waits to receive a packet from the client
 
 			try {
-				//waits to receive a packet from the client
+				newArr = new byte[512];
+				clientPacket = new DatagramPacket(newArr, newArr.length);
 				recSocket.receive(clientPacket);
-				counter++;
+				packetBlock = unpackBlockNumber(clientPacket);
 				cont = true;
 			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
 			if (cont) {
 				clientPort = clientPacket.getPort();
+				out.println(clientPort);
 				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
 				printPacket(clientPacket);
-				//sends the packet on to the server
-				if (counter == packetNumber) {
+				if((Arrays.equals(packetBlock, blockNumber) && side==1) && !delayed){
+					delayed = true;
+					out.println("Delayed Client packet with block number " + blockNumber[0] + blockNumber[1] + " for " + delay + " milliseconds");
 					try {
 						Thread.sleep(delay);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					servSocket.send(serverPacket);
+				} else {
+					//sends the packet on to the server
+					servSocket.send(clientPacket);
 				}
-				servSocket.send(clientPacket);
 			}
-
 			try {
+				newArr = new byte[512];
+				serverPacket = new DatagramPacket(newArr, newArr.length);
 				//waits to receive a packet from the server
 				servSocket.receive(serverPacket);
-				counter++;
 				cont = true;
 			} catch (SocketTimeoutException e) {
 				cont = false;
@@ -244,69 +269,84 @@ public class ErrorSimulator {
 				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
+				printPacket(serverPacket);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
 				printPacket(serverPacket);
 				//sends packet from the server on to the client
-				if (counter == packetNumber) {
+				if((Arrays.equals(packetBlock, blockNumber) && side==2) && !delayed){
+					delayed = true;
+					out.println("Delayed Server packet with block number " + blockNumber[0] + blockNumber[1] + " for " + delay + " milliseconds");
 					try {
 						Thread.sleep(delay);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					sendSocket.send(serverPacket);
+				} else {
+					sendSocket.send(serverPacket);
 				}
-				sendSocket.send(serverPacket);
 				sendSocket.close();
 			}
-			handleQuit();
+
+			//handleQuit();
 		}
 	}
 
-	private static void duplicatePacket(int packetNumber, int delay) throws IOException {
+	private static void duplicatePacket(byte[] blockNumber, int side, int delay) throws IOException {
 
 		out.println("Started duplicatePacket");
 
 		byte[] data;
-		int counter = 0;
 		boolean cont;
+		boolean delayed = false;
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
+		byte[] newArr;
+		byte[] packetBlock = null;
 
 		while (true) {
+			//waits to receive a packet from the client
+
 			try {
-				//waits to receive a packet from the client
+				newArr = new byte[512];
+				clientPacket = new DatagramPacket(newArr, newArr.length);
 				recSocket.receive(clientPacket);
-				counter++;
+				packetBlock = unpackBlockNumber(clientPacket);
 				cont = true;
 			} catch (SocketTimeoutException e) {
 				cont = false;
 			}
 			if (cont) {
 				clientPort = clientPacket.getPort();
+				out.println(clientPort);
 				data = new byte[512];
 				arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
 				clientPacket.setData(data);
 				out.println("received");
 				clientPacket.setPort(serverPort);
 				printPacket(clientPacket);
-				//sends the packet on to the server
-				servSocket.send(clientPacket);
-				if (counter == packetNumber) {
+				if((Arrays.equals(packetBlock, blockNumber) && side==1) && !delayed){
+					delayed = true;
+					out.println("Duplicated Client packet with block number " + blockNumber[0] + blockNumber[1] + " for " + delay + " milliseconds");
+					servSocket.send(serverPacket);
 					try {
 						Thread.sleep(delay);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					servSocket.send(serverPacket);
+				} else {
+					//sends the packet on to the server
 					servSocket.send(clientPacket);
 				}
 			}
-
 			try {
-				//waits to receive a packet from the client
-				recSocket.receive(clientPacket);
-				counter++;
+				newArr = new byte[512];
+				serverPacket = new DatagramPacket(newArr, newArr.length);
+				//waits to receive a packet from the server
+				servSocket.receive(serverPacket);
 				cont = true;
 			} catch (SocketTimeoutException e) {
 				cont = false;
@@ -316,24 +356,29 @@ public class ErrorSimulator {
 				data = new byte[512];
 				arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
 				serverPacket.setData(data);
-				printPacket(serverPacket);
 				serverPacket.setPort(clientPort);
+				printPacket(serverPacket);
 				//opens a new socket to send back to the client
 				sendSocket = new DatagramSocket(SEND_SOCK_PORT);
 				printPacket(serverPacket);
 				//sends packet from the server on to the client
-				sendSocket.send(serverPacket);
-				if (counter == packetNumber) {
+				if((Arrays.equals(packetBlock, blockNumber) && side==2) && !delayed){
+					delayed = true;
+					out.println("Delayed Server packet with block number " + blockNumber[0] + blockNumber[1] + " for " + delay + " milliseconds");
+					sendSocket.send(serverPacket);
 					try {
 						Thread.sleep(delay);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 					sendSocket.send(serverPacket);
+				} else {
+					sendSocket.send(serverPacket);
 				}
 				sendSocket.close();
 			}
-			handleQuit();
+
+			//handleQuit();
 		}
 	}
 
@@ -345,6 +390,13 @@ public class ErrorSimulator {
 		data[1] = packetData[3];
 
 		return data;
+	}
+
+	private static byte[] getBlockNumber(int blockNumber) {
+		byte[] ret = new byte[2];
+		ret[0] = (byte) (blockNumber/128);
+		ret[1] = (byte) (blockNumber%128);
+		return ret;
 	}
 
 	private static void handleQuit() {
