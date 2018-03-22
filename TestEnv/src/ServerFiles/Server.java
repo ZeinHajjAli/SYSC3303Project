@@ -18,6 +18,7 @@ public class Server {
 		byte[] data = new byte[512];
 		receivedPacket = new DatagramPacket(data, data.length);
 		Scanner scanner = new Scanner(in);
+		boolean cont = true;
 		
 		try {
 			recSocket = new DatagramSocket(69);
@@ -32,12 +33,18 @@ public class Server {
 		while(true){
 			try {
 				recSocket.receive(receivedPacket);
+				System.out.println("Received Packet");
+				cont = true;
 			} catch (IOException e) {
-				e.printStackTrace();
+				if (e.getClass().equals(SocketTimeoutException.class)) {
+					cont = false;
+				} else {
+					e.printStackTrace();
+				}
 			}
-
-			new ClientConnection(receivedPacket).start();
-
+			if(cont) {
+				new ClientConnection(receivedPacket).start();
+			}
 			if (scanner.hasNext()){
 				String input = scanner.next();
 

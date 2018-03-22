@@ -6,7 +6,7 @@ import static java.lang.System.*;
 
 public class ErrorSimulator {
 
-	private static final int TIMEOUT = 100;
+	private static final int TIMEOUT = 1000;
 	private static DatagramSocket recSocket, servSocket, sendSocket;
 	private static final int REC_SOCK_PORT = 23;
 	private static final int SERV_SOCK_PORT = 25;
@@ -78,11 +78,14 @@ public class ErrorSimulator {
 		boolean cont;
 		recSocket.setSoTimeout(TIMEOUT);
 		servSocket.setSoTimeout(TIMEOUT);
+		byte[] newArr;
 
 		while (true) {
 			//waits to receive a packet from the client
 
 			try {
+				newArr = new byte[512];
+				clientPacket = new DatagramPacket(newArr, newArr.length);
 				recSocket.receive(clientPacket);
 				cont = true;
 			} catch (SocketTimeoutException e) {
@@ -101,6 +104,8 @@ public class ErrorSimulator {
 				servSocket.send(clientPacket);
 			}
 			try {
+				newArr = new byte[512];
+				serverPacket = new DatagramPacket(newArr, newArr.length);
 				//waits to receive a packet from the server
 				servSocket.receive(serverPacket);
 				cont = true;

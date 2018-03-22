@@ -17,7 +17,7 @@ public class ClientConnection extends Thread {
 	private static FileInputStream myInputStream;
 	private static DatagramPacket lastPacket;
 	private static int port;
-	private static final int TIMEOUT = 1000;
+	private static final int TIMEOUT = 500;
 	private static final String ServPath = ".\\src\\Serv\\";
 	private static int REC_PORT = 25;
 	private static InetAddress localhost;
@@ -155,13 +155,14 @@ public class ClientConnection extends Thread {
 							out.println("Server had an error");
 							shutdown();
 							break;
+						case "RRQ":
+							out.println("duplicate RRQ");
 						default:
 							out.println("DEFAULT");
 							keepSending = false;
 							out.println("There was an ERROR");
 							shutdown();
 							break;
-						//TODO: ERROR handling!!
 					}
 				}
 			}
@@ -252,7 +253,7 @@ public class ClientConnection extends Thread {
                                 sendACK(received);
                             } else if (Arrays.equals(blockNumber, block)) {
                                 sendACK(received);
-                            }  //TODO: ERROR maybe?
+                            }
                         } else {
                             sendError(5, received.getPort());
                         }
@@ -265,7 +266,6 @@ public class ClientConnection extends Thread {
                     default:
                         keepReceiving = false;
                         out.println("There was an ERROR");
-                        //TODO: ERROR handling!!
                         shutdown();
                         break;
                 }

@@ -89,14 +89,31 @@ public class Client
 		newFile.createNewFile();
 		fileWriter = new FileOutputStream(filename);
 		boolean cont;
+		int counter = 1;
 
 		while(keepReceiving) {
+			data = new byte[512];
+			arraycopy(received.getData(), received.getOffset(), data, 0, received.getLength());
+			received.setData(data);
 
 			try {
 				socket.receive(received);
+				System.out.println("RECEIVED: ");
+				printPacket(received);
+				if(counter == 1){
+					REC_PORT = received.getPort();
+				}
 				cont = true;
+				counter++;
+				data = received.getData();
+				arraycopy(received.getData(), received.getOffset(), data, 0, received.getLength());
+				received.setData(data);
 			} catch (SocketTimeoutException e) {
-				sendACK(lastPacket);
+				if(counter > 1) {
+					socket.send(lastPacket);
+				} else {
+					sendACK(lastPacket);
+				}
 				cont = false;
 			}
 			if(cont) {
@@ -106,8 +123,10 @@ public class Client
 							byte[] receivedBytes = unpackReadData(received);
 							byte[] blockNumber = unpackBlockNumber(received);
 
+							received.setPort(SEND_PORT);
 							if (Arrays.equals(blockNumber, nextBlock(block))) {
-								if (received.getLength() < 516) {
+								System.out.println(received.getLength());
+								if (received.getLength() < 512) {
 									keepReceiving = false;
 								}
 								block = nextBlock(block);
@@ -116,7 +135,6 @@ public class Client
 							} else if (Arrays.equals(blockNumber, block)) {
 								sendACK(received);
 							}
-							//TODO: ERROR maybe?
 						} else {
 							sendError(5, received.getPort());
 						}
@@ -131,7 +149,6 @@ public class Client
 					default:
 						keepReceiving = false;
 						out.println("There was an ERROR");
-						//TODO: ERROR handling!!
 						shutdown();
 						break;
 				}
@@ -146,11 +163,11 @@ public class Client
 		data[1] = 4;
 		data[2] = block[0];
 		data[3] = block[1];
-		DatagramPacket ACK =  new DatagramPacket(data, data.length, packet.getSocketAddress());
-		lastPacket = ACK;
+		packet.setData(data);
+		lastPacket = packet;
 
 		try {
-			socket.send(ACK);
+			socket.send(packet);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -223,7 +240,6 @@ public class Client
 						out.println("There was an ERROR");
 						shutdown();
 						break;
-					//TODO: ERROR handling!!
 				}
 			}
 			out.println(keepSending);
