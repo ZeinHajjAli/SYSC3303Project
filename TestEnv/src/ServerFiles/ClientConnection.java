@@ -17,7 +17,7 @@ public class ClientConnection extends Thread {
 	private static FileInputStream myInputStream;
 	private static DatagramPacket lastPacket;
 	private static int port;
-	private static final int TIMEOUT = 500;
+	private static final int TIMEOUT = 100;
 	private static final String ServPath = ".\\src\\Serv\\";
 	private static int REC_PORT = 25;
 	private static InetAddress localhost;
