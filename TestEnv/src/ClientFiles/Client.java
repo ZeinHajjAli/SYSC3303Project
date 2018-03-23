@@ -129,21 +129,34 @@ public class Client
 								if (received.getLength() < 512) {
 									keepReceiving = false;
 								}
+								else if(received.getLength() > 512){
+									sendError(4,received.getPort()); //if greater than 512, its an invalid TFTP operation
+									shutdown();
+								}
 								block = nextBlock(block);
 								fileWriter.write(receivedBytes);
 								sendACK(received);
 							} else if (Arrays.equals(blockNumber, block)) {
 								sendACK(received);
+							} else {
+								sendError(4, received.getPort());
+								shutdown();
 							}
 						} else {
 							sendError(5, received.getPort());
+							shutdown();
 						}
-
 
 						break;
 					case "ERROR":
 						keepReceiving = false;
 						out.println("Server had an ERROR");
+						shutdown();
+						break;
+					case "INVALID":
+						keepReceiving = false;
+						out.println("opcode error");
+						sendError(4, received.getPort());
 						shutdown();
 						break;
 					default:
@@ -217,21 +230,30 @@ public class Client
 					keepSending = false;
 				}
 				switch (validatePacket(received)) {
-					case "ACK":
 
+				    case "ACK":
 						if (received.getPort() == REC_PORT) {
 							byte[] blockNumber = unpackBlockNumber(received);
 							if (Arrays.equals(blockNumber, block)) {
 								block = nextBlock(block);
 								fileBytes = sendData(fileBytes, received);
+							} else {
+								sendError(4, received.getPort());
 							}
 						} else {
 							sendError(5, received.getPort());
+							shutdown();
 						}
 						break;
 					case "ERROR":
 						keepSending = false;
 						out.println("Server had an error");
+						shutdown();
+						break;
+					case "INVALID":
+						keepSending = false;
+						out.println("opcode error");
+						sendError(4, received.getPort());
 						shutdown();
 						break;
 					default:

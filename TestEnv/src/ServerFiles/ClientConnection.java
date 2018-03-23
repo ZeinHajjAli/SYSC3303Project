@@ -145,6 +145,8 @@ public class ClientConnection extends Thread {
 								if (Arrays.equals(blockNumber, block)) {
 									block = nextBlock(block);
 									fileBytes = sendData(fileBytes, received);
+								} else {
+									sendError(4, received.getPort());
 								}
 							} else {
 								sendError(5, received.getPort());
@@ -157,6 +159,12 @@ public class ClientConnection extends Thread {
 							break;
 						case "RRQ":
 							out.println("duplicate RRQ");
+						case "INVALID":
+							keepSending = false;
+							out.println("opcode error");
+							sendError(4, received.getPort());
+							shutdown();
+							break;
 						default:
 							out.println("DEFAULT");
 							keepSending = false;
@@ -245,17 +253,26 @@ public class ClientConnection extends Thread {
                             byte[] blockNumber = unpackBlockNumber(received);
 
                             if (Arrays.equals(blockNumber, nextBlock(block))) {
-                                if (receivedBytes.length < 508) {
+                                if (received.getLength() < 512) {
                                     keepReceiving = false;
                                 }
+                                else if (received.getLength() > 512) {
+									sendError(4,received.getPort()); //if greater than 512, its an inval
+									shutdown();
+								}
                                 block = nextBlock(block);
                                 fileWriter.write(receivedBytes);
                                 sendACK(received);
                             } else if (Arrays.equals(blockNumber, block)) {
                                 sendACK(received);
-                            }
+                            } else {
+                            	sendError(4, received.getPort());
+                            	shutdown();
+							}
+
                         } else {
                             sendError(5, received.getPort());
+                            shutdown();
                         }
                         break;
                     case "ERROR":
@@ -263,6 +280,12 @@ public class ClientConnection extends Thread {
                         out.println("Client had an ERROR");
                         shutdown();
                         break;
+					case "INVALID":
+						keepReceiving = false;
+						out.println("opcode error");
+						sendError(4, received.getPort());
+						shutdown();
+						break;
                     default:
                         keepReceiving = false;
                         out.println("There was an ERROR");
