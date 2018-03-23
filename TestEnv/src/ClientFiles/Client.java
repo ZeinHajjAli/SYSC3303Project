@@ -138,8 +138,7 @@ public class Client
 								sendACK(received);
 							} else if (Arrays.equals(blockNumber, block)) {
 								sendACK(received);
-							}
-							else{
+							} else {
 								sendError(4, received.getPort());
 								shutdown();
 							}
@@ -231,17 +230,15 @@ public class Client
 					keepSending = false;
 				}
 				switch (validatePacket(received)) {
-					case "ACK":
 
+				    case "ACK":
 						if (received.getPort() == REC_PORT) {
 							byte[] blockNumber = unpackBlockNumber(received);
 							if (Arrays.equals(blockNumber, block)) {
 								block = nextBlock(block);
 								fileBytes = sendData(fileBytes, received);
-							}
-							else{
+							} else {
 								sendError(4, received.getPort());
-								shutdown();
 							}
 						} else {
 							sendError(5, received.getPort());

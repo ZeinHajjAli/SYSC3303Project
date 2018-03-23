@@ -145,14 +145,11 @@ public class ClientConnection extends Thread {
 								if (Arrays.equals(blockNumber, block)) {
 									block = nextBlock(block);
 									fileBytes = sendData(fileBytes, received);
-								}
-								else{
+								} else {
 									sendError(4, received.getPort());
-									shutdown();
 								}
 							} else {
 								sendError(5, received.getPort());
-								shutdown();
 							}
 							break;
 						case "ERROR":
@@ -268,8 +265,7 @@ public class ClientConnection extends Thread {
                                 sendACK(received);
                             } else if (Arrays.equals(blockNumber, block)) {
                                 sendACK(received);
-                            }
-                            else{
+                            } else {
                             	sendError(4, received.getPort());
                             	shutdown();
 							}
