@@ -43,21 +43,34 @@ public class ErrorSimulator {
 		out.println("1: Lose a Packet");
 		out.println("2: Delay a Packet");
 		out.println("3: Duplicate a Packet");
+		out.println("4: Incorrect TFTP opcode");
+		out.println("5: Incorrect TID");
 
 		int mode = input.nextInt();
 
 		try {
 			if (mode == 0) {
 				normalMode();
-			} else {
-				out.println("What packet do you want to lose/delay/duplicate? (block numbering starts at 0) ");
+            } else {
+				out.println("What packet do you want to lose/delay/duplicate/incorrect opcode/incorrect TID? (block numbering starts at 0) ");
 				byte[] blockNumber = getBlockNumber(input.nextInt());
-				out.println("Lose/Delay/Duplicate clients packet or servers? (Client: 1 | Server: 2) ");
+				if (mode == 5) {
+				    out.println("incorrect TID for clients packet or servers? [Client: 1 | Server: 2] (Only matters when the Client is receiving)");
+				    int side = input.nextInt();
+				    out.println("What TID would you like to give it? (port number)");
+				    int TID = input.nextInt();
+				    incorrectTID(blockNumber, side, TID);
+                }
+				out.println("Lose/Delay/Duplicate/Incorrect opcode clients packet or servers? [Client: 1 | Server: 2] ");
 				int side = input.nextInt();
 
 				if (mode == 1) {
 					losePacket(blockNumber, side);
-				} else {
+				} else if (mode == 4){
+				    out.println("What opcode would you like to give it? (Invalid opcodes are greater than 5) ");
+				    int opcode = input.nextInt();
+				    incorrectOpcode(blockNumber, side, opcode);
+                } else {
 					out.println("How long to delay? (milliseconds)");
 					int delay = input.nextInt();
 					switch (mode) {
@@ -382,6 +395,154 @@ public class ErrorSimulator {
 		}
 	}
 
+    private static void incorrectOpcode(byte[] blockNumber, int side, int opcode) throws IOException {
+        out.println("Started incorrectOpcode");
+        boolean changed = false;
+        byte[] data;
+        boolean cont;
+        recSocket.setSoTimeout(TIMEOUT);
+        servSocket.setSoTimeout(TIMEOUT);
+        byte[] newArr;
+        byte[] packetBlock = null;
+
+        while (true) {
+            //waits to receive a packet from the client
+
+            try {
+                newArr = new byte[512];
+                clientPacket = new DatagramPacket(newArr, newArr.length);
+                recSocket.receive(clientPacket);
+                packetBlock = unpackBlockNumber(clientPacket);
+                cont = true;
+            } catch (SocketTimeoutException e) {
+                cont = false;
+            }
+            if (cont) {
+                clientPort = clientPacket.getPort();
+                out.println(clientPort);
+                data = new byte[512];
+                arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
+                clientPacket.setData(data);
+                out.println("received");
+                clientPacket.setPort(serverPort);
+                printPacket(clientPacket);
+                if((Arrays.equals(packetBlock, blockNumber) && side==1) && !changed){
+                    out.println("Gave packet with block number " + blockNumber[0] + blockNumber[1] + " an incorrect opcode");
+                    changeOpcode(clientPacket, opcode);
+                    changed = true;
+                }
+                servSocket.send(clientPacket);
+            }
+            try {
+                newArr = new byte[512];
+                serverPacket = new DatagramPacket(newArr, newArr.length);
+                //waits to receive a packet from the server
+                servSocket.receive(serverPacket);
+                cont = true;
+            } catch (SocketTimeoutException e) {
+                cont = false;
+            }
+            if (cont) {
+                serverPort = serverPacket.getPort();
+                data = new byte[512];
+                arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
+                serverPacket.setData(data);
+                serverPacket.setPort(clientPort);
+                printPacket(serverPacket);
+                //opens a new socket to send back to the client
+                sendSocket = new DatagramSocket(SEND_SOCK_PORT);
+                printPacket(serverPacket);
+                //sends packet from the server on to the client
+                if((Arrays.equals(packetBlock, blockNumber) && side==2) && !changed){
+                    out.println("Gave packet with block number " + blockNumber[0] + blockNumber[1] + " an incorrect opcode");
+                    changeOpcode(clientPacket, opcode);
+                    changed = true;
+                }
+                sendSocket.send(serverPacket);
+                sendSocket.close();
+            }
+
+            //handleQuit();
+        }
+    }
+
+    private static void incorrectTID(byte[] blockNumber, int side, int TID) throws IOException {
+        out.println("Started incorrectOpcode");
+        boolean changed = false;
+        DatagramSocket newSocket;
+        byte[] data;
+        boolean cont;
+        recSocket.setSoTimeout(TIMEOUT);
+        servSocket.setSoTimeout(TIMEOUT);
+        byte[] newArr;
+        byte[] packetBlock = null;
+
+        while (true) {
+            //waits to receive a packet from the client
+
+            try {
+                newArr = new byte[512];
+                clientPacket = new DatagramPacket(newArr, newArr.length);
+                recSocket.receive(clientPacket);
+                packetBlock = unpackBlockNumber(clientPacket);
+                cont = true;
+            } catch (SocketTimeoutException e) {
+                cont = false;
+            }
+            if (cont) {
+                clientPort = clientPacket.getPort();
+                out.println(clientPort);
+                data = new byte[512];
+                arraycopy(clientPacket.getData(), clientPacket.getOffset(), data, 0, clientPacket.getLength());
+                clientPacket.setData(data);
+                out.println("received");
+                clientPacket.setPort(serverPort);
+                printPacket(clientPacket);
+                if((Arrays.equals(packetBlock, blockNumber) && side==1) && !changed){
+                    out.println("Gave packet with block number " + blockNumber[0] + blockNumber[1] + " an incorrect opcode");
+                    newSocket = new DatagramSocket(TID);
+                    newSocket.send(clientPacket);
+                    changed = true;
+                } else {
+                    servSocket.send(clientPacket);
+                }
+            }
+            try {
+                newArr = new byte[512];
+                serverPacket = new DatagramPacket(newArr, newArr.length);
+                //waits to receive a packet from the server
+                servSocket.receive(serverPacket);
+                cont = true;
+            } catch (SocketTimeoutException e) {
+                cont = false;
+            }
+            if (cont) {
+                serverPort = serverPacket.getPort();
+                data = new byte[512];
+                arraycopy(serverPacket.getData(), serverPacket.getOffset(), data, 0, serverPacket.getLength());
+                serverPacket.setData(data);
+                serverPacket.setPort(clientPort);
+                printPacket(serverPacket);
+                //opens a new socket to send back to the client
+                printPacket(serverPacket);
+                //sends packet from the server on to the client
+                if((Arrays.equals(packetBlock, blockNumber) && side==2) && !changed){
+                    out.println("Gave packet with block number " + blockNumber[0] + blockNumber[1] + " an incorrect opcode");
+                    newSocket = new DatagramSocket(TID);
+                    newSocket.send(serverPacket);
+                    changed = true;
+                    newSocket.close();
+                } else {
+                    sendSocket = new DatagramSocket(SEND_SOCK_PORT);
+                    sendSocket.send(serverPacket);
+                    sendSocket.close();
+                }
+            }
+
+            //handleQuit();
+        }
+    }
+
 	private static byte[] unpackBlockNumber(DatagramPacket packet)
 	{
 		byte[] packetData = packet.getData();
@@ -400,7 +561,6 @@ public class ErrorSimulator {
 	}
 
 	private static void handleQuit() {
-
 		if(input.hasNext()) {
 			String scannedInput = input.next();
 
@@ -411,14 +571,20 @@ public class ErrorSimulator {
 		}
 	}
 
-	private static void shutdown(){
+	private static void changeOpcode(DatagramPacket packet, int opcode){
+	    byte[] data;
 
+	    data = packet.getData();
+	    data[1] = (byte) opcode;
+	    packet.setData(data);
+    }
+
+	private static void shutdown(){
 		recSocket.close();
 		servSocket.close();
 		sendSocket.close();
 		input.close();
 		exit(0);
-
 	}
 
 	//same method as the one found in the client class

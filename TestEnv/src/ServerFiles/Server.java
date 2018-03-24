@@ -7,7 +7,7 @@ import java.util.*;
 import static java.lang.System.*;
 
 
-public class Server {
+public  class Server {
 
 	private static DatagramSocket recSocket;
 	private static DatagramPacket receivedPacket;

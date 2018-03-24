@@ -52,6 +52,11 @@ public class Client
 
 		mode = reader.next();
 
+		if (!mode.equalsIgnoreCase("octet")) {
+			sendError(4, SEND_PORT);
+			shutdown();
+		}
+
 		reader.close();
 		createSocket(LISTEN_PORT);
 		DatagramPacket packet = formRequest(WR, filename,mode);

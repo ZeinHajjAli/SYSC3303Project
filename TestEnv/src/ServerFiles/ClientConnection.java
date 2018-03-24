@@ -49,6 +49,13 @@ public class ClientConnection extends Thread {
 			sendError(1, port);
 			e.printStackTrace();
 		}
+		String mode = getMode(request, file);
+
+		if(!mode.equalsIgnoreCase("octet")) {
+			sendError(4, port);
+			shutdown();
+		}
+
 		file = encodeFilename(file);
 
 		try {
@@ -390,6 +397,26 @@ public class ClientConnection extends Thread {
 		}
 		// otherwise, extract filename
 		return new String(content,2,j-2);
+
+	}
+
+	private String getMode(DatagramPacket receivedPacket, String filename)
+	{
+		byte[] content = receivedPacket.getData();
+		int len = receivedPacket.getLength();
+		int j;
+		int startLength = 3+filename.length();
+
+		for(j = startLength; j<len; j++){
+			if (content[j] == 0) break;
+		}
+
+		if (j==len-1){
+			sendError(4, port);
+			shutdown();
+		}
+		// otherwise, extract filename
+		return new String(content,startLength,j-startLength);
 
 	}
 
