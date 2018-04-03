@@ -26,6 +26,11 @@ public class ErrorSimulator {
 
 		clientPort = 24;
 		serverPort = 69;
+		try {
+			out.println(InetAddress.getLocalHost());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
 
 		try {
 			recSocket = new DatagramSocket(REC_SOCK_PORT);
