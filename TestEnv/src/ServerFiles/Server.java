@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+
 import static java.lang.System.*;
 
 
@@ -12,6 +13,8 @@ public  class Server {
 	private static DatagramSocket recSocket;
 	private static DatagramPacket receivedPacket;
 	private static final int TIMEOUT = 0;
+	private static String type = "";
+	private static Scanner input1;
 
 	public static void main(String[] args){
 
@@ -25,6 +28,8 @@ public  class Server {
 		receivedPacket = new DatagramPacket(data, data.length);
 		Scanner scanner = new Scanner(in);
 		boolean cont = true;
+
+
 		
 		try {
 			recSocket = new DatagramSocket(69);

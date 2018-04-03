@@ -21,7 +21,10 @@ public class ClientConnection extends Thread {
 	private static final String ServPath = ".\\src\\Serv\\";
 	private static int REC_PORT = 25;
 	private static InetAddress localhost;
+
+	private static String type = "";
 	private static InetAddress address;
+
 
 	ClientConnection(DatagramPacket request){
 
@@ -34,6 +37,8 @@ public class ClientConnection extends Thread {
 			e.printStackTrace();
 		}
         int random = (int )(Math.random() * 6000 + 5000);
+
+
 
 		try {
 			socket = new DatagramSocket(random);

@@ -20,6 +20,7 @@ public class ErrorSimulator {
 	private static InetAddress serverAddress;
 	private static InetAddress clientAddress;
 	private static InetAddress ccAddress;
+	private static String type = "";
 
 	public static void main(String args[]) {
 
@@ -45,6 +46,15 @@ public class ErrorSimulator {
 		serverPacket = new DatagramPacket(data, data.length);
 
 		input = new Scanner(in);
+
+		out.println("Verbose mode(V) or Quiet mode(Q)?");
+
+		type = input.next();
+
+		if(!type.equalsIgnoreCase("V" )&& !type.equalsIgnoreCase ("Q")){
+			exit(0);
+		}
+
 
 		out.println("What mode: ");
 		out.println("0: Normal Mode");
@@ -596,19 +606,24 @@ public class ErrorSimulator {
 	}
 
 	//same method as the one found in the client class
-	private static void printPacket(DatagramPacket p)
-	{
-		byte[] receivedBytes = p.getData();
-		out.println("Data being sent/received in bytes: ");
+	private static void printPacket(DatagramPacket p) {
+		if (type.equals("V")) {
+			byte[] receivedBytes = p.getData();
+			out.println("Data being sent/received in bytes: ");
 
-		for(byte element : receivedBytes) {
-			out.print(element);
+			for (byte element : receivedBytes) {
+				out.print(element);
+			}
+
+			out.println();
+			String receivedString = new String(receivedBytes);
+			out.println("Data being sent/received: " + receivedString);
+			out.println("from/to address: " + p.getAddress());
+			out.println("Port Number: " + p.getPort());
+		} else  {
+			return;
 		}
-		out.println();
-		String receivedString = new String(receivedBytes);
-		out.println("Data being sent/received: " + receivedString);
-		out.println("from/to address: " + p.getAddress());
-		out.println("Port Number: " + p.getPort());
+
 	}
 }
 
