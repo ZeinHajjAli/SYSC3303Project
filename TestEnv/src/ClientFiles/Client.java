@@ -73,12 +73,22 @@ public class Client
 			shutdown();
 		}
 
-		out.println("What's the Server's address? ");
-
-		String addressString = reader.next();
+		out.println("What's the Server's address? (aaa.bbb.ccc.ddd)");
+		String a = reader.next();
+		/*
+		out.println("aaa: ");
+		int a = reader.nextInt();
+		out.println("bbb: ");
+		int b = reader.nextInt();
+		out.println("ccc: ");
+		int c = reader.nextInt();
+		out.println("ddd: ");
+		int d = reader.nextInt();
+		*/
 
 		try {
-			address = InetAddress.getByName(addressString);
+			//address = InetAddress.getByAddress(new byte[] {(byte)a,(byte)b,(byte)c,(byte)d});
+			address = InetAddress.getByName(a);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
