@@ -25,6 +25,7 @@ public class Client
 	private static final int TIMEOUT = 100;
 	private static final int LISTEN_PORT = 24;
 	private static final String ClientPath = ".\\src\\Client\\";
+	private static InetAddress address;
 
 	public static void main(String[] args)
 	{
@@ -55,6 +56,16 @@ public class Client
 		if (!mode.equalsIgnoreCase("octet")) {
 			sendError(4, SEND_PORT);
 			shutdown();
+		}
+
+		out.println("What's the Server's address? ");
+
+		String addressString = reader.next();
+
+		try {
+			address = InetAddress.getByName(addressString);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
 		}
 
 		reader.close();
@@ -107,6 +118,7 @@ public class Client
 				printPacket(received);
 				if(counter == 1){
 					REC_PORT = received.getPort();
+					address = received.getAddress();
 				}
 				cont = true;
 				counter++;
@@ -124,11 +136,12 @@ public class Client
 			if(cont) {
 				switch (validatePacket(received)) {
 					case "DATA":
-						if (received.getPort() == REC_PORT) {
+						if (received.getPort() == REC_PORT && received.getAddress().equals(address)) {
 							byte[] receivedBytes = unpackReadData(received);
 							byte[] blockNumber = unpackBlockNumber(received);
 
 							received.setPort(SEND_PORT);
+							received.setAddress(address);
 							if (Arrays.equals(blockNumber, nextBlock(block))) {
 								System.out.println(received.getLength());
 								if (received.getLength() < 512) {
@@ -182,6 +195,7 @@ public class Client
 		data[2] = block[0];
 		data[3] = block[1];
 		packet.setData(data);
+		packet.setAddress(address);
 		lastPacket = packet;
 
 		try {
@@ -218,11 +232,16 @@ public class Client
 		fileBytes = createArray(filename);
 		boolean keepSending = true;
 		boolean cont;
+		int counter = 1;
 
 		while(keepSending) {
 			try {
 				socket.receive(received);
 				cont = true;
+				if(counter == 1) {
+					REC_PORT = received.getPort();
+					address = received.getAddress() ;
+				}
 			} catch(SocketTimeoutException e){
 				if(lastPacket != null) {
 					socket.send(lastPacket);
@@ -237,7 +256,7 @@ public class Client
 				switch (validatePacket(received)) {
 
 				    case "ACK":
-						if (received.getPort() == REC_PORT) {
+						if (received.getPort() == REC_PORT && received.getAddress().equals(address)) {
 							byte[] blockNumber = unpackBlockNumber(received);
 							if (Arrays.equals(blockNumber, block)) {
 								block = nextBlock(block);
@@ -304,6 +323,7 @@ public class Client
 		packet.setData(data, 0, data.length);
 		lastPacket = packet;
 		packet.setPort(SEND_PORT);
+		packet.setAddress(address);
 		printPacket(packet);
 		socket.send(packet);
 		byte[] changedFile;
@@ -426,7 +446,7 @@ public class Client
 		}
 
 		//puts the final byte array into a new DatagramPacket and gives it the Address as well as the receiving port
-		DatagramPacket packet = new DatagramPacket(finalBytes, finalBytes.length, new InetSocketAddress("localhost",SEND_PORT));
+		DatagramPacket packet = new DatagramPacket(finalBytes, finalBytes.length, new InetSocketAddress(address,SEND_PORT));
 		printPacket(packet);
 
 		return packet;
@@ -437,9 +457,15 @@ public class Client
 		String errorMessage;
 		byte[] data;
 		switch(code){
-			case 5: errorMessage = "	Wrong Number (ERROR: 05)	";
-				break;
-			default: errorMessage = "	Unknown Error	";
+			case 0: errorMessage =	"UNKNOWN ERROR";
+			case 1: errorMessage =	"File Not Found";
+			case 2: errorMessage =	"Access Violation";
+			case 3: errorMessage =	"Disk Full/Allocation Exceeded";
+			case 4: errorMessage =	"Illegal TFTP Operation";
+			case 5: errorMessage =	"Unknown Transfer ID";
+			case 6: errorMessage =	"File Already Exists";
+			case 7: errorMessage =	"No Such User";
+			default: errorMessage =	"Unknown Error";
 		}
 		byte[] message = errorMessage.getBytes();
 		data = new byte[5 + message.length];
@@ -449,7 +475,7 @@ public class Client
 		data[3] = (byte) code;
 		arraycopy(message, 0, data, 4, message.length + 4 - 4);
 		data[data.length-1] = 0;
-		DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress("localhost",port));
+		DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress(address,port));
 		printPacket(send);
 		try {
 			socket.send(send);

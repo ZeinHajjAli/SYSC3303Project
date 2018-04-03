@@ -17,6 +17,9 @@ public class ErrorSimulator {
 	private static DatagramPacket clientPacket;
 	private static DatagramPacket serverPacket;
 	private static Scanner input;
+	private static InetAddress serverAddress;
+	private static InetAddress clientAddress;
+	private static InetAddress ccAddress;
 
 	public static void main(String args[]) {
 
