@@ -26,6 +26,7 @@ public class Client
 	private static final int LISTEN_PORT = 24;
 	private static final String ClientPath = ".\\src\\Client\\";
 	private static InetAddress address;
+	private static String type = "";
 
 	public static void main(String[] args)
 	{
@@ -33,6 +34,14 @@ public class Client
 		Scanner reader = new Scanner(in);
 		int WR;
 		String filename, mode;
+
+		out.println("Verbose mode(V) or Quiet mode(Q)?");
+
+		type = reader.next();
+
+		if(!type.equalsIgnoreCase("V" )&& !type.equalsIgnoreCase ("Q")){
+			exit(0);
+		}
 
 		out.println("Read(1) or Write(2): ");
 
@@ -487,19 +496,24 @@ public class Client
 	//method for printing DatagramPackets with a specific format, both in bytes and as a String, as well as the address and the port
 	private static void printPacket(DatagramPacket p)
 	{
-		byte[] receivedBytes = p.getData();
-		out.println("Data being sent/received in bytes: ");
+		if (type.equals("V")){
+			byte[] receivedBytes = p.getData();
+			out.println("Data being sent/received in bytes: ");
 
-		for(byte element : receivedBytes) {
-			out.print(element);
+			for(byte element : receivedBytes) {
+				out.print(element);
+			}
+
+			out.println();
+			String receivedString = new String(receivedBytes);
+			out.println("Data being sent/received: " + receivedString);
+			out.println("from/to address: " + p.getAddress());
+			out.println("Port Number: " + p.getPort());
+		}else {
+			return;
 		}
-
-		out.println();
-		String receivedString = new String(receivedBytes);
-		out.println("Data being sent/received: " + receivedString);
-		out.println("from/to address: " + p.getAddress());
-		out.println("Port Number: " + p.getPort());
 	}
+
 
 	private static void shutdown() {
 		socket.close();
