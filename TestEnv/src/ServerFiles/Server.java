@@ -15,6 +15,12 @@ public  class Server {
 
 	public static void main(String[] args){
 
+		try {
+			out.println(InetAddress.getLocalHost());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+
 		byte[] data = new byte[512];
 		receivedPacket = new DatagramPacket(data, data.length);
 		Scanner scanner = new Scanner(in);

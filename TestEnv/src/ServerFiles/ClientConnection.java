@@ -28,6 +28,11 @@ public class ClientConnection extends Thread {
 		this.request = request;
 		address = request.getAddress();
 		port = request.getPort();
+		try {
+			out.println(InetAddress.getLocalHost());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
         int random = (int )(Math.random() * 6000 + 5000);
 
 		try {
@@ -186,6 +191,7 @@ public class ClientConnection extends Thread {
 			out.println(keepSending);
 		}
 	}
+
 
 	private void sendError(int code, int port)
 	{

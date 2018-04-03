@@ -30,6 +30,12 @@ public class Client
 	public static void main(String[] args)
 	{
 
+		try {
+			out.println(InetAddress.getLocalHost());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+
 		Scanner reader = new Scanner(in);
 		int WR;
 		String filename, mode;
