@@ -473,7 +473,7 @@ public class ErrorSimulator {
                 //sends packet from the server on to the client
                 if((Arrays.equals(packetBlock, blockNumber) && side==2) && !changed){
                     out.println("Gave packet with block number " + blockNumber[0] + blockNumber[1] + " an incorrect opcode");
-                    changeOpcode(clientPacket, opcode);
+                    changeOpcode(serverPacket, opcode);
                     changed = true;
                 }
                 sendSocket.send(serverPacket);

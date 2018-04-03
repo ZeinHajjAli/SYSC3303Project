@@ -159,7 +159,7 @@ public class ClientConnection extends Thread {
 					switch (validatePacket(received)) {
 						case "ACK":
 
-							if (received.getPort() == REC_PORT && received.getAddress().equals(address)) {
+							if ((received.getPort() == REC_PORT) && (received.getAddress().equals(address))) {
 								byte[] blockNumber = unpackBlockNumber(received);
 								if (Arrays.equals(blockNumber, block)) {
 									block = nextBlock(block);
@@ -228,6 +228,7 @@ public class ClientConnection extends Thread {
 		data[1] = 5;
 		data[2] = 0;
 		data[3] = (byte) code;
+		out.println(errorMessage);
 
 		arraycopy(message, 0, data, 4, message.length + 4 - 4);
 		data[data.length-1] = 0;
@@ -277,7 +278,7 @@ public class ClientConnection extends Thread {
 			if(cont) {
                 switch (validatePacket(received)) {
                     case "DATA":
-                        if (received.getPort() == port && received.getAddress().equals(address)) {
+                        if ((received.getPort() == port) && (received.getAddress().equals(address))) {
                             byte[] receivedBytes = unpackReadData(received);
                             byte[] blockNumber = unpackBlockNumber(received);
 

@@ -161,7 +161,7 @@ public class Client
 			if(cont) {
 				switch (validatePacket(received)) {
 					case "DATA":
-						if (received.getPort() == REC_PORT && received.getAddress().equals(address)) {
+						if ((received.getPort() == REC_PORT) && (received.getAddress().equals(address))) {
 							byte[] receivedBytes = unpackReadData(received);
 							byte[] blockNumber = unpackBlockNumber(received);
 
@@ -281,7 +281,7 @@ public class Client
 				switch (validatePacket(received)) {
 
 				    case "ACK":
-						if (received.getPort() == REC_PORT && received.getAddress().equals(address)) {
+						if ((received.getPort() == REC_PORT) && (received.getAddress().equals(address))) {
 							byte[] blockNumber = unpackBlockNumber(received);
 							if (Arrays.equals(blockNumber, block)) {
 								block = nextBlock(block);
