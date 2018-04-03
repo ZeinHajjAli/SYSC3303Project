@@ -21,10 +21,13 @@ public class ClientConnection extends Thread {
 	private static final String ServPath = ".\\src\\Serv\\";
 	private static int REC_PORT = 25;
 	private static InetAddress localhost;
+	private static InetAddress address;
 
 	ClientConnection(DatagramPacket request){
 
 		this.request = request;
+		address = request.getAddress();
+		port = request.getPort();
         int random = (int )(Math.random() * 6000 + 5000);
 
 		try {
@@ -39,7 +42,6 @@ public class ClientConnection extends Thread {
 
 		out.println("ClientConnection running");
 
-		port = request.getPort();
 		String type = validatePacket(request);
 		String file = null;
 
@@ -59,7 +61,6 @@ public class ClientConnection extends Thread {
 		file = encodeFilename(file);
 
 		try {
-			localhost = InetAddress.getByName("127.0.0.1");
 			switch (type) {
 				case "WRQ":
 					sendACK(request);
@@ -141,13 +142,14 @@ public class ClientConnection extends Thread {
 				if(first){
 					block = nextBlock(block);
 					received.setPort(REC_PORT);
+					received.setAddress(address);
 					fileBytes = sendData(fileBytes, received);
 					first = false;
 				} else {
 					switch (validatePacket(received)) {
 						case "ACK":
 
-							if (received.getPort() == REC_PORT) {
+							if (received.getPort() == REC_PORT && received.getAddress().equals(address)) {
 								byte[] blockNumber = unpackBlockNumber(received);
 								if (Arrays.equals(blockNumber, block)) {
 									block = nextBlock(block);
@@ -191,14 +193,23 @@ public class ClientConnection extends Thread {
 		byte[] data;
 		switch(code){
 			case 0: errorMessage =	"UNKNOWN ERROR";
+			break;
 			case 1: errorMessage =	"File Not Found";
+			break;
 			case 2: errorMessage =	"Access Violation";
+			break;
 			case 3: errorMessage =	"Disk Full/Allocation Exceeded";
+			break;
 			case 4: errorMessage =	"Illegal TFTP Operation";
+			break;
 			case 5: errorMessage =	"Unknown Transfer ID";
+			break;
 			case 6: errorMessage =	"File Already Exists";
+			break;
 			case 7: errorMessage =	"No Such User";
+			break;
 			default: errorMessage =	"Unknown Error";
+			break;
 		}
 		byte[] message = errorMessage.getBytes();
 		data = new byte[5 + message.length];
@@ -209,7 +220,7 @@ public class ClientConnection extends Thread {
 
 		arraycopy(message, 0, data, 4, message.length + 4 - 4);
 		data[data.length-1] = 0;
-		DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress("localhost",port));
+		DatagramPacket send = new DatagramPacket(data, data.length, new InetSocketAddress(address,port));
 		lastPacket = send;
 
 		try {
@@ -255,7 +266,7 @@ public class ClientConnection extends Thread {
 			if(cont) {
                 switch (validatePacket(received)) {
                     case "DATA":
-                        if (received.getPort() == port) {
+                        if (received.getPort() == port && received.getAddress().equals(address)) {
                             byte[] receivedBytes = unpackReadData(received);
                             byte[] blockNumber = unpackBlockNumber(received);
 
@@ -336,9 +347,9 @@ public class ClientConnection extends Thread {
 
 		arraycopy(fileBytes, 0, data, 4, len);
 		packet.setData(data, 0, data.length);
-		packet.setAddress(localhost);
+		packet.setAddress(address);
+		packet.setPort(port);
 		lastPacket = packet;
-		packet.setPort(REC_PORT);
 		socket.send(packet);
 		byte[] changedFile;
 		if(len >= 508){
