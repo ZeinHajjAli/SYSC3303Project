@@ -464,14 +464,23 @@ public class Client
 		byte[] data;
 		switch(code){
 			case 0: errorMessage =	"UNKNOWN ERROR";
+				break;
 			case 1: errorMessage =	"File Not Found";
+				break;
 			case 2: errorMessage =	"Access Violation";
+				break;
 			case 3: errorMessage =	"Disk Full/Allocation Exceeded";
+				break;
 			case 4: errorMessage =	"Illegal TFTP Operation";
+				break;
 			case 5: errorMessage =	"Unknown Transfer ID";
+				break;
 			case 6: errorMessage =	"File Already Exists";
+				break;
 			case 7: errorMessage =	"No Such User";
+				break;
 			default: errorMessage =	"Unknown Error";
+				break;
 		}
 		byte[] message = errorMessage.getBytes();
 		data = new byte[5 + message.length];

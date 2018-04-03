@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="909526fd-2a4f-4b74-8482-159fc6eaf8cb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ClientFiles/Client.java" afterPath="$PROJECT_DIR$/src/ClientFiles/Client.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ErrorSimulator.java" afterPath="$PROJECT_DIR$/src/ErrorSimulator.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ServerFiles/ClientConnection.java" afterPath="$PROJECT_DIR$/src/ServerFiles/ClientConnection.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ServerFiles/Server.java" afterPath="$PROJECT_DIR$/src/ServerFiles/Server.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -21,8 +17,8 @@
       <file leaf-file-name="Client.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/ClientFiles/Client.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="36" column="9" lean-forward="true" selection-start-line="32" selection-start-column="8" selection-end-line="36" selection-end-column="9" />
+            <state relative-caret-position="680">
+              <caret line="482" column="22" lean-forward="false" selection-start-line="482" selection-start-column="22" selection-end-line="482" selection-end-column="22" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -43,8 +39,8 @@
       <file leaf-file-name="ClientConnection.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ServerFiles/ClientConnection.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="476">
-              <caret line="34" column="9" lean-forward="false" selection-start-line="34" selection-start-column="9" selection-end-line="34" selection-end-column="9" />
+            <state relative-caret-position="425">
+              <caret line="214" column="15" lean-forward="false" selection-start-line="200" selection-start-column="12" selection-end-line="217" selection-end-column="18" />
               <folding />
             </state>
           </provider>
@@ -122,10 +118,10 @@
         <option value="$PROJECT_DIR$/src/Serv/test.txt" />
         <option value="$PROJECT_DIR$/src/losePacket.java" />
         <option value="$PROJECT_DIR$/src/Client/test.txt" />
-        <option value="$PROJECT_DIR$/src/ClientFiles/Client.java" />
         <option value="$PROJECT_DIR$/src/ErrorSimulator.java" />
         <option value="$PROJECT_DIR$/src/ServerFiles/ClientConnection.java" />
         <option value="$PROJECT_DIR$/src/ServerFiles/Server.java" />
+        <option value="$PROJECT_DIR$/src/ClientFiles/Client.java" />
       </list>
     </option>
   </component>
@@ -378,7 +374,7 @@
       <workItem from="1521574117681" duration="3493000" />
       <workItem from="1521726808599" duration="5034000" />
       <workItem from="1521734394693" duration="8175000" />
-      <workItem from="1522766580601" duration="162000" />
+      <workItem from="1522766580601" duration="556000" />
     </task>
     <task id="LOCAL-00001" summary="Changed path for file uploads/downloads">
       <created>1521593824743</created>
@@ -391,7 +387,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28015000" />
+    <option name="totallyTimeSpent" value="28409000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -565,14 +561,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ServerFiles/ClientConnection.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="476">
-          <caret line="34" column="9" lean-forward="false" selection-start-line="34" selection-start-column="9" selection-end-line="34" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ServerFiles/Server.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
@@ -583,10 +571,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/ServerFiles/ClientConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="214" column="15" lean-forward="false" selection-start-line="200" selection-start-column="12" selection-end-line="217" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/ClientFiles/Client.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="36" column="9" lean-forward="true" selection-start-line="32" selection-start-column="8" selection-end-line="36" selection-end-column="9" />
+        <state relative-caret-position="680">
+          <caret line="482" column="22" lean-forward="false" selection-start-line="482" selection-start-column="22" selection-end-line="482" selection-end-column="22" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
