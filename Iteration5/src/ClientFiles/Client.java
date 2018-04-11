@@ -1,3 +1,4 @@
+//SYSC 3303 Group 8
 package ClientFiles;
 
 import java.io.*;
@@ -12,6 +13,7 @@ import static java.lang.System.exit;
 import static java.lang.System.in;
 import static java.lang.System.out;
 
+//Client class for read/write TFTP
 public class Client
 {
 
@@ -36,7 +38,7 @@ public class Client
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-
+		// Scanner used for user inputs
 		Scanner reader = new Scanner(in);
 		int WR;
 		String filename, mode;
@@ -69,6 +71,7 @@ public class Client
 		mode = reader.next();
 
 		if (!mode.equalsIgnoreCase("octet")) {
+			//sends an error with code 4
 			sendError(4, SEND_PORT);
 			shutdown();
 		}
@@ -85,7 +88,8 @@ public class Client
 		out.println("ddd: ");
 		int d = reader.nextInt();
 		*/
-
+		
+		//gets InetAddress object from the name or ipAddresss
 		try {
 			//address = InetAddress.getByAddress(new byte[] {(byte)a,(byte)b,(byte)c,(byte)d});
 			address = InetAddress.getByName(a);
@@ -93,21 +97,27 @@ public class Client
 			e.printStackTrace();
 		}
 
+		//close the scanner
 		reader.close();
 		createSocket(LISTEN_PORT);
+		//formrequestr forms the first tftp packet to be sent with the required options
 		DatagramPacket packet = formRequest(WR, filename,mode);
 		lastPacket = packet;
 
 		try {
 			socket.send(packet);
 
+			//adds filepath to filename
 			filename = encodeFilename(filename);
 			if(WR == 1) {
+				//starts readRequest method
 				readRequest(filename);
 			} else {
+				//starts writeRequest method
 				writeRequest(filename);
 			}
 		} catch (IOException e) {
+			//handles file and filesystem errors (IOExceptions)
 			String msg = e.getMessage();
 			if(msg.equals("There is not enough space on the disk") || msg.equals("Not enough space") || msg.equals("No space left on device")){
 				sendError(3,SEND_PORT);
@@ -121,27 +131,35 @@ public class Client
 
 	}
 
+	//hgandles readrequests after the first packet is sent
 	private static void readRequest(String filename) throws IOException
 	{
 		byte data[] = new byte[512];
 		DatagramPacket received = new DatagramPacket(data, data.length);
 		boolean keepReceiving = true;
+		//makes a new File object pointing to the new file made
 		File newFile = new File(filename);
+		//creates it on the disk
 		newFile.createNewFile();
+		//to write to the file
 		fileWriter = new FileOutputStream(filename);
 		boolean cont;
 		int counter = 1;
 
+		//while the transfer is going on without any errors or anomalies
 		while(keepReceiving) {
 			data = new byte[512];
 			arraycopy(received.getData(), received.getOffset(), data, 0, received.getLength());
 			received.setData(data);
 
 			try {
+				//wait to receive from server
 				socket.receive(received);
 				System.out.println("RECEIVED: ");
+				//prints detailed packet info if in verbose mode
 				printPacket(received);
 				if(counter == 1){
+					//if its the first time receiving, set the correct ports and address to the ones fromthe current packet
 					REC_PORT = received.getPort();
 					address = received.getAddress();
 				}
@@ -150,14 +168,18 @@ public class Client
 				data = received.getData();
 				arraycopy(received.getData(), received.getOffset(), data, 0, received.getLength());
 				received.setData(data);
+				//if the socket times out waiting
 			} catch (SocketTimeoutException e) {
 				if(counter > 1) {
+					//if its the first time receiving, it sends the last packet (RRQ)
 					socket.send(lastPacket);
 				} else {
+					//else it resends the last ACK
 					sendACK(lastPacket);
 				}
 				cont = false;
 			}
+			//if somthing was received
 			if(cont) {
 				switch (validatePacket(received)) {
 					case "DATA":
@@ -167,21 +189,29 @@ public class Client
 
 							received.setPort(SEND_PORT);
 							received.setAddress(address);
+							//if the block numbers are correct
 							if (Arrays.equals(blockNumber, nextBlock(block))) {
 								System.out.println(received.getLength());
 								if (received.getLength() < 512) {
+									//if the array size is smaller than 512, it ends the transfer
 									keepReceiving = false;
 								}
 								else if(received.getLength() > 512){
+									//else if its larger, it sends an error wiuth code 4 and shuts down
 									sendError(4,received.getPort()); //if greater than 512, its an invalid TFTP operation
 									shutdown();
 								}
+								//increment block by 1
 								block = nextBlock(block);
+								//write into the file
 								fileWriter.write(receivedBytes);
+								//send an ACK
 								sendACK(received);
 							} else if (Arrays.equals(blockNumber, block)) {
+								//if received the same data again, resend the ACK from last time
 								sendACK(received);
 							} else {
+								//else send an error with code 4 `and shutdown
 								sendError(4, received.getPort());
 								shutdown();
 							}
@@ -212,6 +242,7 @@ public class Client
 		}
 	}
 
+	//This method sends an ACK with the current Block number
 	private static void sendACK(DatagramPacket packet)
 	{
 		byte[] data = new byte[4];
@@ -230,6 +261,7 @@ public class Client
 		}
 	}
 
+	//read packets block number
 	private static byte[] unpackBlockNumber(DatagramPacket packet)
 	{
 		byte[] packetData = packet.getData();
@@ -240,6 +272,7 @@ public class Client
 		return data;
 	}
 
+	//read packets data
 	private static byte[] unpackReadData(DatagramPacket packet)
 	{
 		byte[] packetData = packet.getData();
@@ -249,6 +282,7 @@ public class Client
 		return data;
 	}
 
+	//handles WRQs
 	private static void writeRequest(String filename) throws IOException
 	{
 		byte data[] = new byte[512];
@@ -317,6 +351,7 @@ public class Client
 		}
 	}
 
+	//returns the block after the one given in the argument
 	private static byte[] nextBlock(byte[] myBlock)
 	{
 		byte[] ret = new byte[2];
@@ -330,6 +365,7 @@ public class Client
 		return ret;
 	}
 
+	//sends data from a file and returns a changed array without the sent data
 	private static byte[] sendData(byte[] fileBytes, DatagramPacket packet) throws IOException
 	{
 		byte[] data = new byte[512];
@@ -365,6 +401,7 @@ public class Client
 		return changedFile;
 	}
 
+	//returns type of packet
 	private static String validatePacket(DatagramPacket packet)
 	{
 		byte[] data = packet.getData();

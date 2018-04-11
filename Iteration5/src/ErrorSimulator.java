@@ -561,6 +561,7 @@ public class ErrorSimulator {
         }
     }
 
+	//reads packets block number
 	private static byte[] unpackBlockNumber(DatagramPacket packet)
 	{
 		byte[] packetData = packet.getData();
@@ -571,6 +572,7 @@ public class ErrorSimulator {
 		return data;
 	}
 
+	//Get block number as an array from an int
 	private static byte[] getBlockNumber(int blockNumber) {
 		byte[] ret = new byte[2];
 		ret[0] = (byte) (blockNumber/128);
@@ -578,6 +580,7 @@ public class ErrorSimulator {
 		return ret;
 	}
 
+	//handles quitiing
 	private static void handleQuit() {
 		if(input.hasNext()) {
 			String scannedInput = input.next();
@@ -589,6 +592,7 @@ public class ErrorSimulator {
 		}
 	}
 
+	//changes opcode of the packet
 	private static void changeOpcode(DatagramPacket packet, int opcode){
 	    byte[] data;
 
@@ -597,6 +601,7 @@ public class ErrorSimulator {
 	    packet.setData(data);
     }
 
+	//shuts down the Error Simulator
 	private static void shutdown(){
 		recSocket.close();
 		servSocket.close();
